@@ -172,7 +172,6 @@ c-----------------------------------------------------------------------
       integer opt_parrsb(3), opt_parmetis(10)
 
 #if defined(PARRSB) || defined(PARMETIS)
-
       call read_con(wk,size(wk),neli,nvi,nelgti,nelgvi)
       if (nvi .ne. nlv)
      $   call exitti('Number of vertices do not match!$',nv)

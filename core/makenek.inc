@@ -89,6 +89,7 @@ if [ "$1" == "-h" ] || [ "$1" == "-help" ] || [ "$PPLIST" == "?" ]; then
   echo "  VENDOR_BLAS   use VENDOR BLAS/LAPACK"
   echo "  DPROCMAP      use distributed processor mapping"
   echo "  PARRSB        use online RSB partitioner (experimental)"
+  echo "  DUMPMAP       Dump a map file (requires PARRSB, experimental)"
   return 11
 fi
 
@@ -293,6 +294,7 @@ CMT=0
 MPIIO=1
 DPROCMAP=0
 PARRSB=0
+DUMPMAP=0
 PARMETIS=0
 CVODE=0
 HYPRE=0
@@ -316,6 +318,9 @@ do
      PARRSB_OPT+=" GSLIBPATH=$SOURCE_ROOT_GSLIB"
      USR_LFLAGS+=" -L$SOURCE_ROOT_PARRSB/lib -lparRSB"
      PARRSB_INC="$SOURCE_ROOT_PARRSB/include"
+   fi
+   if [ "$i" == "DUMPMAP" ]; then
+     DUMPMAP=1
    fi
    if [ "$i" == "PARMETIS" ]; then
      PARMETIS=1
