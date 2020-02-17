@@ -43,6 +43,12 @@ function build_3rdparty() {
   fi
   cd $CASEDIR
 
+  if [ $GPU -ne 0 ]; then
+     cd $SOURCE_ROOT_GPU
+     CFLAGS="-O2 $CFLAGS" ./install 2>&1 | tee -a $CASEDIR/build.log >/dev/null
+  fi
+  cd $CASEDIR
+
   printf "done\n"
   set +o pipefail
 }
@@ -59,6 +65,8 @@ function clean_3rdparty() {
   cd $SOURCE_ROOT_CVODE; ./install clean 2>/dev/null
   cd $CASEDIR
   cd $SOURCE_ROOT_HYPRE; ./install clean 2>/dev/null
+  cd $CASEDIR
+  cd $SOURCE_ROOT_GPU; ./install clean 2>/dev/null
   cd $CASEDIR
 }
 
@@ -89,9 +97,9 @@ if [ "$1" == "-h" ] || [ "$1" == "-help" ] || [ "$PPLIST" == "?" ]; then
   echo "  VENDOR_BLAS   use VENDOR BLAS/LAPACK"
   echo "  DPROCMAP      use distributed processor mapping"
   echo "  PARRSB        use online RSB partitioner (experimental)"
+  echo "  GPU           Run the simulation in GPUs"
   return 11
 fi
-
 
 if [ "$VERMAKENEK" != "19.0.1" ]; then
   echo "FATAL ERROR: Your makenek is incompatible!"
@@ -119,6 +127,8 @@ SOURCE_ROOT_CVODE="$NEK_SOURCE_ROOT/3rd_party/cvode"
 export SOURCE_ROOT_CVODE
 SOURCE_ROOT_HYPRE="$NEK_SOURCE_ROOT/3rd_party/hypre"
 export SOURCE_ROOT_HYPRE
+SOURCE_ROOT_GPU="$NEK_SOURCE_ROOT/3rd_party/exa"
+export SOURCE_ROOT_GPU
 
 NODEP=1
 if [ "$1" == "-build-dep" ]; then
@@ -299,6 +309,7 @@ CVODE=0
 HYPRE=0
 MXM_USER="mxm_std.o"
 VENDOR_BLAS=0 
+GPU=0
 
 for i in $PPLIST
 do
@@ -343,6 +354,13 @@ do
    fi
    if [ "$i" == "VENDOR_BLAS" ]; then
      VENDOR_BLAS=1
+   fi
+   if [ "$i" == "GPU" ]; then
+     GPU=1
+     GPU_OPT="PREFIX=.. UNDERSCORE=$UNDERSCORE MPI=$MPI" 
+     GPU_OPT+=" GSLIBPATH=$SOURCE_ROOT_GSLIB"
+     USR_LFLAGS+=" -L$SOURCE_ROOT_GPU/lib -lexa"
+     GPU_INC="$SOURCE_ROOT_GPU/include"
    fi
 done
 
@@ -391,6 +409,7 @@ export MPIO
 export UNDERSCORE
 export GSLIB_OPT
 export PARRSB_OPT
+export GPU_OPT
 
 if [ $ONLYDEP -eq 1 ]; then
   build_3rdparty
@@ -484,6 +503,14 @@ fi
 
 if [ $PARRSB -ne 0 ]; then
   sed -e "s:^PARRSB_IFLAGS[ ]*=.*:PARRSB_IFLAGS\:=-I${PARRSB_INC}:" \
+      -e "s:^USR_LFLAGS[ ]*=.*:USR_LFLAGS=$USR_LFLAGS:" \
+      .makefile > .makefile.tmp
+
+  mv .makefile.tmp .makefile
+fi
+
+if [ $GPU -ne 0 ]; then
+  sed -e "s:^GPU_IFLAGS[ ]*=.*:GPU_IFLAGS\:=-I${GPU_INC}:" \
       -e "s:^USR_LFLAGS[ ]*=.*:USR_LFLAGS=$USR_LFLAGS:" \
       .makefile > .makefile.tmp
 
