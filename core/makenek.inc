@@ -459,6 +459,7 @@ sed -e "s:^FC[ ]*=.*:FC=$FC:" \
 -e "s/^CMT[ ]*=.*/CMT=$CMT/" \
 -e "s:^GSLIB_IFLAGS[ ]*=.*:GSLIB_IFLAGS\:=${GSLIB_IFLAGS}:" \
 -e "s/^DPROCMAP[ ]*=.*/DPROCMAP=${DPROCMAP}/" \
+-e "s/^GPU[ ]*=.*/GPU=${GPU}/" \
 -e "s/^VISIT[ ]*=.*/VISIT=${VISIT}/" \
 -e "s:^USR[ ]*=.*:USR=$USR:" \
 -e "s:^USR_LFLAGS[ ]*=.*:USR_LFLAGS=$USR_LFLAGS:" \

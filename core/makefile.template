@@ -23,12 +23,14 @@ MPI=0
 CMT=0 
 DPROCMAP=0
 VISIT=0
+GPU=0
 
 VISIT_IFLAGS=
 VISIT_LFLAGS=
 HYPRE_IFLAGS=
 GSLIB_IFLAGS=
 PARRSB_IFLAGS=
+GPU_IFLAGS=
 
 ################################################################################
 
@@ -58,6 +60,9 @@ partitioner.o
 ################################################################################
 # MXM 
 MXM =  
+################################################################################
+# ACCEL (GPU)
+ACCEL = accel.o
 ################################################################################
 
 COMM_MPI := comm_mpi.o
@@ -98,6 +103,10 @@ TMP1 = $(CORE) $(MXM) $(USR) $(COMM_MPI) $(VISITO)
 ifeq ($(CMT),1)
 TMP1 += $(CMTCORE)
 OPT_INCDIR += -I $(SCMT)
+endif
+
+ifneq ($(GPU),0)
+	TMP1 += $(ACCEL)
 endif
 
 OPT_INCDIR += -I $S/experimental
@@ -249,6 +258,9 @@ $(OBJDIR)/diagnostics.o	:$(SCMT)/diagnostics.f;		$(FC) -c $(FL2) $< -o $@
 $(OBJDIR)/mxm_wrapper.o	  :$S/mxm_wrapper.f;		$(FC) -c $(FL2) $< -o $@ 
 $(OBJDIR)/mxm_std.o	  :$S/mxm_std.f;		$(FC) -c $(FL3) $< -o $@
 $(OBJDIR)/mxm_bgq.o	  :$S/mxm_bgq.f;		$(FC) -c $(FL3) $< -o $@
+
+# ACCEL ############################################################################
+$(OBJDIR)/accel.o  :$(S)/accel.f; $(FC) -c $(FL2) $< -o $@ $(GPU_IFLAGS)
 
 # C Files ##################################################################################
 $(OBJDIR)/byte.o             :$S/byte.c;              $(CC) -c $(cFL2) $< -o $@
