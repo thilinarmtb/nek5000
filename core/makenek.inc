@@ -363,9 +363,11 @@ do
      (! which ${cxx_test} 1>/dev/null) && \
        echo "FATAL ERROR: Cannot find ${cxx_test} !" && return 11
 
-     GPU_OPT="PREFIX=. UNDERSCORE=$UNDERSCORE MPI=$MPI"
+     GPU_OPT="UNDERSCORE=$UNDERSCORE MPI=$MPI"
      GPU_INC="$SOURCE_ROOT_GPU/include"
-     #USR_LFLAGS+=" -L$SOURCE_ROOT_GPU/lib -lexa"
+     USR_LFLAGS+=" -L$SOURCE_ROOT_GPU/lib -lexaHmholtz"
+     USR_LFLAGS+=" -L$SOURCE_ROOT_GPU/lib -lexa"
+     USR_LFLAGS+=" -L$SOURCE_ROOT_GPU/lib -locca"
    fi
 done
 
