@@ -10,6 +10,7 @@ set -a
 # Fortran/C compiler
 #FC="mpif77"
 #CC="mpicc"
+#CXX="mpic++"
 
 # config options (set to "?" to get a list)
 #PPLIST="" 

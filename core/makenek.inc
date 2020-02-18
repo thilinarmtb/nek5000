@@ -76,6 +76,7 @@ function config_nek() {
 : ${NEK_SOURCE_ROOT:="$HOME/Nek5000"}
 : ${FC:="mpif77"}
 : ${CC:="mpicc"}
+: ${CXX:="mpic++"}
 : ${MPI:=1}
 : ${PROFILING:=1}
 : ${VISIT:=0}
@@ -357,10 +358,14 @@ do
    fi
    if [ "$i" == "GPU" ]; then
      GPU=1
-     GPU_OPT="PREFIX=.. UNDERSCORE=$UNDERSCORE MPI=$MPI"
-     GPU_OPT+=" GSLIBPATH=$SOURCE_ROOT_GSLIB"
-     USR_LFLAGS+=" -L$SOURCE_ROOT_GPU/lib -lexa"
+     # test CXX compiler
+     cxx_test=`echo ${CXX} | awk '{print $1}'`
+     (! which ${cxx_test} 1>/dev/null) && \
+       echo "FATAL ERROR: Cannot find ${cxx_test} !" && return 11
+
+     GPU_OPT="PREFIX=. UNDERSCORE=$UNDERSCORE MPI=$MPI"
      GPU_INC="$SOURCE_ROOT_GPU/include"
+     #USR_LFLAGS+=" -L$SOURCE_ROOT_GPU/lib -lexa"
    fi
 done
 
@@ -410,6 +415,7 @@ export UNDERSCORE
 export GSLIB_OPT
 export PARRSB_OPT
 export GPU_OPT
+export CXX
 
 if [ $ONLYDEP -eq 1 ]; then
   build_3rdparty

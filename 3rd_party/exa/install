@@ -1,3 +1,77 @@
 #!/bin/bash
 
-echo "Empty"
+function clean_exa_and_deps(){
+  local cur_dir=`pwd`
+  [ -d occa ] && cd occa       && make clean && cd ${cur_dir}
+  [ -d occa ] && cd gslib      && make clean && cd ${cur_dir}
+  [ -d occa ] && cd exaCore    && make clean && cd ${cur_dir}
+  [ -d occa ] && cd exaHmholtz && make clean && cd ${cur_dir}
+
+  exit 0
+}
+
+function exit_err(){
+  echo "Building exa libraries failed: $@"
+  exit 1
+}
+
+function build_occa(){
+  local cur_dir=`pwd`
+
+  [ ! -d occa ] && \
+    (git clone https://github.com/libocca/occa.git || exit_err ${LINENO})
+
+  cd occa
+  CXX=${CXX} CXXFLAGS=${exa_cxxflags} make -j4 all || exit_err ${LINENO}
+  cd ${cur_dir}
+
+  export OCCA_DIR=`pwd`/occa
+}
+
+function build_gslib(){
+  local cur_dir=`pwd`
+
+  [ ! -d gslib ] && \
+    (git clone https://github.com/gslib/gslib.git || exit_err ${LINENO})
+
+  cd gslib
+  CC=${CC} CFLAGS=${exa_cflags} DESTDIR=. make -j4 install || exit_err ${LINENO}
+  cd ${cur_dir}
+
+  export GS_DIR=`pwd`/gslib
+}
+
+function build_exa(){
+  local cur_dir=`pwd`
+  [ ! -d exaCore ] && \
+    (git clone https://github.com/exaAlgo/exaCore.git || exit_err ${LINENO})
+
+  [ ! -d exaHmholtz ] && \
+    (git clone https://github.com/exaAlgo/exaHmholtz.git || exit_err ${LINENO})
+
+  cd exaCore
+  CC=${CC} CFLAGS=${exa_cflags} FC=${FC} FFLAGS=${exa_fflags} \
+    PREFIX=${cur_dir}/exaCore/build make -j4 install || exit_err ${LINENO}
+  cd ${cur_dir}
+
+  export EXA_DIR=${cur_dir}/exaCore/build
+
+  cd exaHmholtz
+  CC=${CC} CFLAGS=${exa_cflags} FC=${FC} FFLAGS=${exa_fflags} \
+    PREFIX=${cur_dir}/exaHmholtz/build make -j4 install || exit_err ${LINENO}
+  cd ${cur_dir}
+
+  export EXA_HMHOLTZ_DIR=${cur_dir}/exaHmholtz/build
+}
+
+[ $# -eq 1 ] && [ "$1" = "clean" ] && clean_exa_and_deps
+
+export exa_cflags="${CFLAGS} -fPIC"
+export exa_cxxflags="${CFLAGS} -fPIC"
+export exa_fflags="${FFLAGS}"
+
+echo "Building exa libraries ..."
+build_occa
+build_gslib
+build_exa
+echo "Finished building exa libraries."
