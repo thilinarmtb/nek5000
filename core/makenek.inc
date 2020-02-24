@@ -365,6 +365,7 @@ do
 
      GPU_OPT="UNDERSCORE=$UNDERSCORE MPI=$MPI"
      GPU_INC="$SOURCE_ROOT_GPU/include"
+     USR_LFLAGS+=" -Wl,-rpath,$SOURCE_ROOT_GPU/lib"
      USR_LFLAGS+=" -L$SOURCE_ROOT_GPU/lib -lexaHmholtz"
      USR_LFLAGS+=" -L$SOURCE_ROOT_GPU/lib -lexa"
      USR_LFLAGS+=" -L$SOURCE_ROOT_GPU/lib -locca"
