@@ -43,6 +43,8 @@ c      COMMON /SCRCG/ DUMM10(LX1,LY1,LZ1,LELT,1)
       integer*8 glo_num, ngv
       integer vertex
 
+      integer exa_h,exa_hmhz_h,mesh_h,settings_h,ierr
+
       ! set word size for REAL
       wdsize = sizeof(rtest)
       ! set word size for INTEGER
@@ -165,6 +167,16 @@ c      COMMON /SCRCG/ DUMM10(LX1,LY1,LZ1,LELT,1)
         write (6,'(a,g13.5,a)') 
      &     ' Initialization successfully completed ', tinit, ' sec'
       endif
+
+#if defined(GPU)
+      if(nio.eq.0) then
+        write(6,*) 'Initializing GPU ...'
+      endif
+      call accel_setup(exa_h,exa_hmhz_h,mesh_h,settings_h)
+      if(nio.eq.0) then
+        write(6,*) 'Finished initializing GPU.'
+      endif
+#endif
 
       return
       end
