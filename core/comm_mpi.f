@@ -586,19 +586,6 @@ c-----------------------------------------------------------------------
       include 'SIZE'
       include 'TOTAL'
 
-      integer ifaccel,exa_h,exa_hmhz_h,mesh_h,settings_h,ierr
-      common /nekgpu/ ifaccel,exa_h,exa_hmhz_h,mesh_h,settings_h
-
-      if(ifaccel.eq.1) then
-        if(nid.eq.0) then
-          write(6,*) 'Finalizing GPU ...'
-        endif
-        call accel_finalize(exa_h,exa_hmhz_h,mesh_h,settings_h)
-        if(nid.eq.0) then
-          write(6,*) 'Finished Finalizing GPU.'
-        endif
-      endif
-
       if (nid.eq.0) then
          write(6,*) ' '
          write(6,'(A)') 'run successful: dying ...'

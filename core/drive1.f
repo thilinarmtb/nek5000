@@ -158,6 +158,19 @@ c      COMMON /SCRCG/ DUMM10(LX1,LY1,LZ1,LELT,1)
       call time00       !     Initalize timers to ZERO
       call opcount(2)
 
+#if defined(GPU)
+      ifaccel=1
+#else
+      ifaccel=0
+#endif
+
+      if(ifaccel.eq.1) then
+        call accel_setup(exa_h,exa_hmhz_h,mesh_h,settings_h)
+        if(nio.eq.0) then
+          write(6,*) 'Finished initializing GPU.'
+        endif
+      endif
+
       ntdump=0
       if (timeio.ne.0.0) ntdump = int( time/timeio )
 
@@ -167,22 +180,6 @@ c      COMMON /SCRCG/ DUMM10(LX1,LY1,LZ1,LELT,1)
         if (time.ne.0.0) write (6,'(a,e14.7)') ' Initial time:',time
         write (6,'(a,g13.5,a)') 
      &     ' Initialization successfully completed ', tinit, ' sec'
-      endif
-
-#if defined(GPU)
-      ifaccel=1
-#else
-      ifaccel=0
-#endif
-
-      if(ifaccel.eq.1) then
-        if(nio.eq.0) then
-          write(6,*) 'Initializing GPU ...'
-        endif
-        call accel_setup(exa_h,exa_hmhz_h,mesh_h,settings_h)
-        if(nio.eq.0) then
-          write(6,*) 'Finished initializing GPU.'
-        endif
       endif
 
       return
@@ -356,6 +353,9 @@ c-----------------------------------------------------------------------
       include 'SIZE'
       include 'TOTAL'
 
+      integer ifaccel,exa_h,exa_hmhz_h,mesh_h,settings_h,ierr
+      common /nekgpu/ ifaccel,exa_h,exa_hmhz_h,mesh_h,settings_h
+
       if(instep.ne.0) call runstat
 
 c      if (ifstrs) then
@@ -363,6 +363,13 @@ c         call fgslib_crs_free(xxth_strs)
 c      else
 c         call fgslib_crs_free(xxth(1))
 c      endif
+
+      if(ifaccel.eq.1) then
+        call accel_finalize(exa_h,exa_hmhz_h,mesh_h,settings_h)
+        if(nid.eq.0) then
+          write(6,*) 'Finished Finalizing GPU.'
+        endif
+      endif
 
       call in_situ_end()
       call exitt0()
