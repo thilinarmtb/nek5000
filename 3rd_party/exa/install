@@ -7,8 +7,9 @@ function clean_exa_and_deps(){
   [ -d occa ] && cd exaCore    && make clean && cd ${cur_dir}
   [ -d occa ] && cd exaHmholtz && make clean && cd ${cur_dir}
 
-  rm -rf ${cur_dir}/lib ${cur_dir}/include ${cur_dir}/share 2>/dev/null
-  rm -rf ${cur_dir}/kernels ${cur_dir}/bin 2>/dev/null
+  rm -rf ${exa_build_dir}/lib ${exa_build_dir}/include
+    ${exa_build_dir}/share 2>/dev/null
+  rm -rf ${exa_build_dir}/kernels ${exa_build_dir}/bin 2>/dev/null
   exit 0
 }
 
@@ -24,10 +25,11 @@ function build_occa(){
     (git clone https://github.com/libocca/occa.git || exit_err ${LINENO})
 
   cd occa
-  CXX=${CXX} CXXFLAGS=${exa_cxxflags} make PREFIX=${cur_dir} -j4 all || exit_err ${LINENO}
+  CXX=${CXX} CXXFLAGS=${exa_cxxflags} make\
+    PREFIX=${exa_build_dir} -j4 all || exit_err ${LINENO}
   cd ${cur_dir}
 
-  export OCCA_DIR=`pwd`/occa
+  export OCCA_DIR="${exa_build_dir}"
 }
 
 function build_gslib(){
@@ -37,10 +39,11 @@ function build_gslib(){
     (git clone https://github.com/gslib/gslib.git || exit_err ${LINENO})
 
   cd gslib
-  CC=${CC} CFLAGS=${exa_cflags} make -j4 install ${GSLIB_OPT} || exit_err ${LINENO}
+  CC=${CC} CFLAGS=${exa_cflags} DESTDIR="${exa_build_dir}" make\
+    -j4 install || exit_err ${LINENO}
   cd ${cur_dir}
 
-  export GS_DIR=`pwd`
+  export GS_DIR="${exa_build_dir}"
 }
 
 function build_exa(){
@@ -48,22 +51,22 @@ function build_exa(){
   [ ! -d exaCore ] && \
     (git clone https://github.com/exaAlgo/exaCore.git || exit_err ${LINENO})
 
+  cd exaCore
+  CC=${CC} CFLAGS=${exa_cflags} FC=${FC} FFLAGS=${exa_fflags} \
+    PREFIX=${exa_build_dir} make -j4 install ${GPU_OPT} || exit_err ${LINENO}
+  cd ${cur_dir}
+
+  export EXA_DIR=${exa_build_dir}
+
   [ ! -d exaHmholtz ] && \
     (git clone https://github.com/exaAlgo/exaHmholtz.git || exit_err ${LINENO})
 
-  cd exaCore
-  CC=${CC} CFLAGS=${exa_cflags} FC=${FC} FFLAGS=${exa_fflags} \
-    PREFIX=${cur_dir} make -j4 install ${GPU_OPT} || exit_err ${LINENO}
-  cd ${cur_dir}
-
-  export EXA_DIR=${cur_dir}
-
   cd exaHmholtz
   CC=${CC} CFLAGS=${exa_cflags} FC=${FC} FFLAGS=${exa_fflags} \
-    PREFIX=${cur_dir} make -j4 install ${GPU_OPT} || exit_err ${LINENO}
+    PREFIX=${exa_build_dir} make -j4 install ${GPU_OPT} || exit_err ${LINENO}
   cd ${cur_dir}
 
-  export EXA_HMHOLTZ_DIR=${cur_dir}
+  export EXA_HMHOLTZ_DIR=${exa_build_dir}
 }
 
 [ $# -eq 1 ] && [ "$1" = "clean" ] && clean_exa_and_deps
@@ -71,6 +74,7 @@ function build_exa(){
 export exa_cflags="${CFLAGS} -fPIC"
 export exa_cxxflags="${CFLAGS} -fPIC"
 export exa_fflags="${FFLAGS}"
+export exa_build_dir="${BUILD_ROOT_GPU}"
 
 echo "Building exa libraries ..."
 build_occa

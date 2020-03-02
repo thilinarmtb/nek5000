@@ -130,6 +130,8 @@ SOURCE_ROOT_HYPRE="$NEK_SOURCE_ROOT/3rd_party/hypre"
 export SOURCE_ROOT_HYPRE
 SOURCE_ROOT_GPU="$NEK_SOURCE_ROOT/3rd_party/exa"
 export SOURCE_ROOT_GPU
+BUILD_ROOT_GPU="$NEK_SOURCE_ROOT/3rd_party/exa/build"
+export BUILD_ROOT_GPU
 
 NODEP=1
 if [ "$1" == "-build-dep" ]; then
@@ -364,11 +366,11 @@ do
        echo "FATAL ERROR: Cannot find ${cxx_test} !" && return 11
 
      GPU_OPT="UNDERSCORE=$UNDERSCORE MPI=$MPI"
-     GPU_INC="$SOURCE_ROOT_GPU/include"
-     USR_LFLAGS+=" -Wl,-rpath,$SOURCE_ROOT_GPU/lib"
-     USR_LFLAGS+=" -L$SOURCE_ROOT_GPU/lib -lexaHmholtz"
-     USR_LFLAGS+=" -L$SOURCE_ROOT_GPU/lib -lexa"
-     USR_LFLAGS+=" -L$SOURCE_ROOT_GPU/lib -locca"
+     GPU_INC="$BUILD_ROOT_GPU/include"
+     USR_LFLAGS+=" -Wl,-rpath,$BUILD_ROOT_GPU/lib"
+     USR_LFLAGS+=" -L$BUILD_ROOT_GPU/lib -lexaHmholtz"
+     USR_LFLAGS+=" -L$BUILD_ROOT_GPU/lib -lexa"
+     USR_LFLAGS+=" -L$BUILD_ROOT_GPU/lib -locca"
    fi
 done
 
