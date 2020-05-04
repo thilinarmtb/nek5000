@@ -25,8 +25,8 @@ function build_occa(){
     (git clone https://github.com/libocca/occa.git || exit_err ${LINENO})
 
   cd occa
-  CXX=${CXX} CXXFLAGS=${exa_cxxflags} make\
-    PREFIX=${exa_build_dir} -j4 all || exit_err ${LINENO}
+  CXX="${CXX}" CXXFLAGS="${exa_cxxflags}" make\
+    PREFIX="${exa_build_dir}" -j4 all || exit_err ${LINENO}
   cd ${cur_dir}
 
   export OCCA_DIR="${exa_build_dir}"
@@ -39,7 +39,7 @@ function build_gslib(){
     (git clone https://github.com/gslib/gslib.git || exit_err ${LINENO})
 
   cd gslib
-  CC=${CC} CFLAGS=${exa_cflags} DESTDIR="${exa_build_dir}" make\
+  CC="${CC}" CFLAGS="${exa_cflags}" DESTDIR="${exa_build_dir}" make\
     -j4 install || exit_err ${LINENO}
   cd ${cur_dir}
 
@@ -52,18 +52,18 @@ function build_exa(){
     (git clone https://github.com/exaAlgo/exaCore.git || exit_err ${LINENO})
 
   cd exaCore
-  CC=${CC} CFLAGS=${exa_cflags} FC=${FC} FFLAGS=${exa_fflags} \
-    PREFIX=${exa_build_dir} make -j4 install ${GPU_OPT} || exit_err ${LINENO}
+  CC="${CC}" CFLAGS="${exa_cflags}" FC="${FC}" FFLAGS="${exa_fflags}" \
+    PREFIX="${exa_build_dir}" make -j4 install "${GPU_OPT}" || exit_err ${LINENO}
   cd ${cur_dir}
 
   export EXA_DIR=${exa_build_dir}
 
   [ ! -d exaHmholtz ] && \
-    (git clone https://github.com/exaAlgo/exaHmholtz.git || exit_err ${LINENO})
+    (git clone https://github.com/thilinarmtb/exaHmholtz.git -b cg || exit_err ${LINENO})
 
   cd exaHmholtz
-  CC=${CC} CFLAGS=${exa_cflags} FC=${FC} FFLAGS=${exa_fflags} \
-    PREFIX=${exa_build_dir} make -j4 install ${GPU_OPT} || exit_err ${LINENO}
+  CC="${CC}" CFLAGS="${exa_cflags}" FC="${FC}" FFLAGS="${exa_fflags}" \
+    PREFIX="${exa_build_dir}" make -j4 install "${GPU_OPT}" || exit_err ${LINENO}
   cd ${cur_dir}
 
   export EXA_HMHOLTZ_DIR=${exa_build_dir}

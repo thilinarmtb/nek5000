@@ -34,8 +34,8 @@
       call set_vert(glo_num,ngv,nx1,nelt,vertex,.false.)
       call exameshsetglobalnumbering(mesh_h,glo_num,ierr)
 
-      n_tot=nx1*ny1*nz1*nelt
       if(ndim.eq.2) then
+        n_tot=nx1*ny1*nelt
         do i=1,n_tot
           geom(1,i,1,1,1)=g1m1 (i,1,1,1)
           geom(2,i,1,1,1)=g2m1 (i,1,1,1)
@@ -43,6 +43,7 @@
           geom(4,i,1,1,1)=jacm1(i,1,1,1)
         enddo
       elseif(ndim.eq.3) then
+        n_tot=nx1*ny1*nz1*nelt
         do i=1,n_tot
           geom(1,i,1,1,1)=g1m1 (i,1,1,1)
           geom(2,i,1,1,1)=g2m1 (i,1,1,1)
@@ -62,7 +63,7 @@
 
       ! create and setup hmholtz
       call exahmholtzcreate(exa_hmhz_h,exa_h,ierr)
-      call exahmholtzsetup(exa_hmhz_h,settings_h,mesh_h,ierr)
+c     call exahmholtzsetup(exa_hmhz_h,settings_h,mesh_h,ierr)
 
       return
       end
@@ -75,7 +76,7 @@ c-----------------------------------------------------------------------
 
       call exasettingsfree(settings_h,ierr)
       call exameshdestroy(mesh_h,ierr)
-      call exahmholtzdestroy(exa_hmhz_h,ierr)
+c     call exahmholtzdestroy(exa_hmhz_h,ierr)
       call exafinalize(exa_h,ierr)
 
       return
