@@ -16,10 +16,10 @@
 
       include 'exaf.h'
 
-      call exainit('/occa/gpu/opencl',nekcomm,exa_h,ierr)
+      call exainit('/occa/gpu/cuda',nekcomm,exa_h,ierr)
 
       call exasettingscreate(exa_h,exa_str_null,settings_h,ierr)
-      ! TODO: Init this
+      ! TODO: Init this (pass exa_hmholtz_dir)
 
       ! create and setup mesh
       call exameshcreate(mesh_h,exa_str_null,exa_h,ierr)
@@ -63,7 +63,7 @@
 
       ! create and setup hmholtz
       call exahmholtzcreate(exa_hmhz_h,exa_h,ierr)
-c     call exahmholtzsetup(exa_hmhz_h,settings_h,mesh_h,ierr)
+      call exahmholtzsetup(exa_hmhz_h,settings_h,mesh_h,ierr)
 
       return
       end
@@ -76,7 +76,7 @@ c-----------------------------------------------------------------------
 
       call exasettingsfree(settings_h,ierr)
       call exameshdestroy(mesh_h,ierr)
-c     call exahmholtzdestroy(exa_hmhz_h,ierr)
+      call exahmholtzdestroy(exa_hmhz_h,ierr)
       call exafinalize(exa_h,ierr)
 
       return
