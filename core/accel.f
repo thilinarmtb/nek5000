@@ -21,6 +21,10 @@
       call exasettingscreate(exa_h,exa_str_null,settings_h,ierr)
       ! TODO: Init this (pass exa_hmholtz_dir)
 
+      ! create and setup hmholtz
+      call exahmholtzcreate(exa_hmhz_h,exa_h,ierr)
+      call exahmholtzsetup(exa_hmhz_h,settings_h,ierr)
+
       ! create and setup mesh
       call exameshcreate(mesh_h,exa_str_null,exa_h,ierr)
 
@@ -60,10 +64,6 @@
       call exameshsetderivativematrix(mesh_h,dxm1,ierr)
 
       call exameshsetup(mesh_h,settings_h,ierr)
-
-      ! create and setup hmholtz
-      call exahmholtzcreate(exa_hmhz_h,exa_h,ierr)
-      call exahmholtzsetup(exa_hmhz_h,settings_h,mesh_h,ierr)
 
       return
       end
