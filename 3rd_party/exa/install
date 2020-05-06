@@ -1,5 +1,10 @@
 #!/bin/bash
 
+export exa_cflags="${CFLAGS} -fPIC"
+export exa_cxxflags="${CFLAGS} -fPIC"
+export exa_fflags="${FFLAGS}"
+export exa_build_dir="${BUILD_ROOT_GPU}"
+
 function clean_exa_and_deps(){
   local cur_dir=`pwd`
   [ -d occa ] && cd occa       && make clean && cd ${cur_dir}
@@ -7,9 +12,7 @@ function clean_exa_and_deps(){
   [ -d occa ] && cd exaCore    && make clean && cd ${cur_dir}
   [ -d occa ] && cd exaHmholtz && make clean && cd ${cur_dir}
 
-  rm -rf ${exa_build_dir}/lib ${exa_build_dir}/include
-    ${exa_build_dir}/share 2>/dev/null
-  rm -rf ${exa_build_dir}/kernels ${exa_build_dir}/bin 2>/dev/null
+  rm -rf ${exa_build_dir} 2>/dev/null
   exit 0
 }
 
@@ -70,11 +73,6 @@ function build_exa(){
 }
 
 [ $# -eq 1 ] && [ "$1" = "clean" ] && clean_exa_and_deps
-
-export exa_cflags="${CFLAGS} -fPIC"
-export exa_cxxflags="${CFLAGS} -fPIC"
-export exa_fflags="${FFLAGS}"
-export exa_build_dir="${BUILD_ROOT_GPU}"
 
 echo "Building exa libraries ..."
 build_occa
