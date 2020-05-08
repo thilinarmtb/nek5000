@@ -39,7 +39,7 @@
       call exameshsetmeshz(mesh_h,zm1,ierr)
 
       call set_vert(glo_num,ngv,nx1,nelt,vertex,.false.)
-      call exameshsetglobalnumbering(mesh_h,glo_num,ierr)
+      call exameshsetglobalids(mesh_h,glo_num,ierr)
 
       if(ndim.eq.2) then
         n_tot=nx1*ny1*nelt
