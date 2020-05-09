@@ -19,7 +19,7 @@
       call exainit('/occa/gpu/cuda',nekcomm,exa_h,ierr)
 
       call exasettingscreate(exa_h,exa_str_null,settings_h,ierr)
-      ! TODO: Init this (pass exa_hmholtz_dir)
+      call exasettingssetint('general::order',nx1,settings_h,ierr)
 
       ! create and setup hmholtz
       call exahmholtzcreate(exa_hmhz_h,exa_h,ierr)
