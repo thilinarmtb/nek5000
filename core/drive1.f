@@ -166,7 +166,7 @@ c      COMMON /SCRCG/ DUMM10(LX1,LY1,LZ1,LELT,1)
 #endif
 
       if(ifaccel.eq.1) then
-        call accel_setup(ierr)
+        call accel_setup(glo_num,ierr)
         if((ierr.eq.0).and.(nid.eq.0)) then
           write(6,*) 'Finished initializing GPU.'
         endif
