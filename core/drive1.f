@@ -7,7 +7,9 @@ c
 c
       include 'OPCTR'
       include 'CTIMER'
-
+c
+      include 'ACCEL'
+c
 C     used scratch arrays
 C     NOTE: no initial declaration needed. Linker will take 
 c           care about the size of the CBs automatically
@@ -43,8 +45,7 @@ c      COMMON /SCRCG/ DUMM10(LX1,LY1,LZ1,LELT,1)
       integer*8 glo_num, ngv
       integer vertex
 
-      integer ifaccel,exa_h,exa_hmhz_h,mesh_h,settings_h,ierr
-      common /nekgpu/ ifaccel,exa_h,exa_hmhz_h,mesh_h,settings_h
+      integer ierr
 
       ! set word size for REAL
       wdsize = sizeof(rtest)
@@ -165,8 +166,8 @@ c      COMMON /SCRCG/ DUMM10(LX1,LY1,LZ1,LELT,1)
 #endif
 
       if(ifaccel.eq.1) then
-        call accel_setup(exa_h,exa_hmhz_h,mesh_h,settings_h)
-        if(nio.eq.0) then
+        call accel_setup(ierr)
+        if((ierr.eq.0).and.(nid.eq.0)) then
           write(6,*) 'Finished initializing GPU.'
         endif
       endif
@@ -352,9 +353,9 @@ c-----------------------------------------------------------------------
 
       include 'SIZE'
       include 'TOTAL'
+      include 'ACCEL'
 
-      integer ifaccel,exa_h,exa_hmhz_h,mesh_h,settings_h,ierr
-      common /nekgpu/ ifaccel,exa_h,exa_hmhz_h,mesh_h,settings_h
+      integer ierr
 
       if(instep.ne.0) call runstat
 
@@ -365,8 +366,8 @@ c         call fgslib_crs_free(xxth(1))
 c      endif
 
       if(ifaccel.eq.1) then
-        call accel_finalize(exa_h,exa_hmhz_h,mesh_h,settings_h)
-        if(nid.eq.0) then
+        call accel_finalize(ierr)
+        if((ierr.eq.0).and.(nid.eq.0)) then
           write(6,*) 'Finished Finalizing GPU.'
         endif
       endif

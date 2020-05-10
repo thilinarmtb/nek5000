@@ -1,20 +1,20 @@
-      subroutine accel_setup(exa_h,exa_hmhz_h,mesh_h,settings_h)
+c-----------------------------------------------------------------------
+      subroutine accel_setup(ierr)
       include 'SIZE'
       include 'TOTAL'
-
-
-      integer vertex
-      common /ivrtx/ vertex((2**ldim)*lelt)
-!     TODO declare mid,mp,...
-      common /nekmpi/ mid,mp,nekcomm,nekgroup,nekreal
-
-      integer exa_h,exa_hmhz_h,mesh_h,settings_h,ierr
-      integer*8 ngv,glo_num(nx1,ny1,nz1,nelt)
-
-      integer n_tot
-      real geom(7,nx1,ny1,nz1,nelt)
+      include 'ACCEL'
 
       include 'exaf.h'
+
+      integer ierr
+
+      integer vertex((2**ldim)*lelt)
+      integer*8 ngv,glo_num(nx1,ny1,nz1,nelt)
+
+      common /nekmpi/mid,mp,nekcomm,nekgroup,nekreal
+
+      real geom(7,lx1*ly1*lz1*lelt)
+      integer n_tot
 
       call exainit('/occa/gpu/cuda',nekcomm,exa_h,ierr)
 
@@ -44,21 +44,21 @@
       if(ndim.eq.2) then
         n_tot=nx1*ny1*nelt
         do i=1,n_tot
-          geom(1,i,1,1,1)=g1m1 (i,1,1,1)
-          geom(2,i,1,1,1)=g2m1 (i,1,1,1)
-          geom(3,i,1,1,1)=g4m1 (i,1,1,1)
-          geom(4,i,1,1,1)=jacm1(i,1,1,1)
+          geom(1,i)=g1m1 (i,1,1,1)
+          geom(2,i)=g2m1 (i,1,1,1)
+          geom(3,i)=g4m1 (i,1,1,1)
+          geom(4,i)=jacm1(i,1,1,1)
         enddo
       elseif(ndim.eq.3) then
         n_tot=nx1*ny1*nz1*nelt
         do i=1,n_tot
-          geom(1,i,1,1,1)=g1m1 (i,1,1,1)
-          geom(2,i,1,1,1)=g2m1 (i,1,1,1)
-          geom(3,i,1,1,1)=g3m1 (i,1,1,1)
-          geom(4,i,1,1,1)=g4m1 (i,1,1,1)
-          geom(5,i,1,1,1)=g5m1 (i,1,1,1)
-          geom(6,i,1,1,1)=g6m1 (i,1,1,1)
-          geom(7,i,1,1,1)=jacm1(i,1,1,1)
+          geom(1,i)=g1m1 (i,1,1,1)
+          geom(2,i)=g2m1 (i,1,1,1)
+          geom(3,i)=g3m1 (i,1,1,1)
+          geom(4,i)=g4m1 (i,1,1,1)
+          geom(5,i)=g5m1 (i,1,1,1)
+          geom(6,i)=g6m1 (i,1,1,1)
+          geom(7,i)=jacm1(i,1,1,1)
         enddo
       endif
       call exameshsetgeometricfactors(mesh_h,geom,ierr)
@@ -71,11 +71,25 @@
       return
       end
 c-----------------------------------------------------------------------
-      subroutine accel_finalize(exa_h,exa_hmhz_h,mesh_h,settings_h)
-
-      integer exa_h,exa_hmhz_h,mesh_h,settings_h,ierr
-
+      subroutine accel_cg(u,r,tol,maxit,ierr)
+      include 'SIZE'
+      include 'ACCEL'
       include 'exaf.h'
+
+      integer lt
+      parameter(lt=lx1*ly1*lz1*lelt)
+
+      integer maxit,ierr
+      real u(lt),r(lt)
+      real tol
+
+      end
+c-----------------------------------------------------------------------
+      subroutine accel_finalize(ierr)
+      include 'ACCEL'
+      include 'exaf.h'
+
+      integer ierr
 
       call exasettingsfree(settings_h,ierr)
       call exameshdestroy(mesh_h,ierr)
