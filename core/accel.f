@@ -11,7 +11,7 @@ c-----------------------------------------------------------------------
 
       common /nekmpi/mid,mp,nekcomm,nekgroup,nekreal
 
-      real geom(7,lx1*ly1*lz1*lelt)
+      real geom(lx1*ly1*lz1,7,lelt)
 
       integer n_tot
 
@@ -40,23 +40,29 @@ c-----------------------------------------------------------------------
       call exameshsetglobalids(mesh_h,glo_num,ierr)
 
       if(ndim.eq.2) then
-        n_tot=nx1*ny1*nelt
-        do i=1,n_tot
-          geom(1,i)=g1m1 (i,1,1,1)
-          geom(2,i)=g2m1 (i,1,1,1)
-          geom(3,i)=g4m1 (i,1,1,1)
-          geom(4,i)=jacm1(i,1,1,1)
+        do e=1,nelt
+        do i=1,nx1*ny1
+          geom(i,1,e)=g1m1 (i,1,1,e)
+          geom(i,2,e)=g2m1 (i,1,1,e)
+          geom(i,3,e)=g4m1 (i,1,1,e)
+          geom(i,4,e)=jacm1(i,1,1,e)
+        enddo
         enddo
       elseif(ndim.eq.3) then
-        n_tot=nx1*ny1*nz1*nelt
-        do i=1,n_tot
-          geom(1,i)=g1m1 (i,1,1,1)
-          geom(2,i)=g2m1 (i,1,1,1)
-          geom(3,i)=g3m1 (i,1,1,1)
-          geom(4,i)=g4m1 (i,1,1,1)
-          geom(5,i)=g5m1 (i,1,1,1)
-          geom(6,i)=g6m1 (i,1,1,1)
-          geom(7,i)=jacm1(i,1,1,1)
+        do e=1,nelt
+        do i=1,nx1*ny1*nz1
+          geom(i,1,e)=g1m1 (i,1,1,e)
+          geom(i,2,e)=g4m1 (i,1,1,e)
+          geom(i,3,e)=g5m1 (i,1,1,e)
+          geom(i,4,e)=g2m1 (i,1,1,e)
+          geom(i,5,e)=g6m1 (i,1,1,e)
+          geom(i,6,e)=g1m1 (i,1,1,e)
+          geom(i,7,e)=jacm1(i,1,1,e)
+#if 0
+          write(6,*) 'G(i)=',geom(i,1,e),geom(i,2,e),geom(i,3,e),
+     $      geom(i,4,e),geom(i,5,e),geom(i,6,e)
+#endif
+        enddo
         enddo
       endif
       call exameshsetgeometricfactors(mesh_h,geom,ierr)
