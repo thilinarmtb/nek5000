@@ -71,7 +71,7 @@ c-----------------------------------------------------------------------
       return
       end
 c-----------------------------------------------------------------------
-      subroutine accel_cg(u,r,tol,maxit,ierr)
+      subroutine accel_cg(u,r,tol,maxit,verbose,ierr)
       include 'SIZE'
       include 'ACCEL'
       include 'exaf.h'
@@ -79,10 +79,30 @@ c-----------------------------------------------------------------------
       integer lt
       parameter(lt=lx1*ly1*lz1*lelt)
 
-      integer maxit,ierr
-      real u(lt),r(lt)
+      real u(lt),r(lt),sol(1)
       real tol
+      integer maxit,verbose,ierr
 
+      integer d_u,d_r
+      integer*8 in_offset,sol_offset
+      parameter(in_offset=0)
+
+      call exavectorcreate(exa_h,lt,exa_scalar,d_u,ierr)
+      call exavectorwrite (d_u,u,in_offset,ierr)
+
+      call exavectorcreate(exa_h,lt,exa_scalar,d_r,ierr)
+      call exavectorwrite (d_r,r,in_offset,ierr)
+
+      call exahmholtzcg(exa_hmhz_h,d_u,d_r,exa_mesh_h,tol,
+     $  maxit,verbose,ierr)
+
+      call exavectorread(d_u,sol,sol_offset,ierr)
+      do i=1,lt
+        u(i)=sol(i+sol_offset)
+      enddo
+
+      call exavectorfree(d_u,ierr)
+      call exavectorfree(d_r,ierr)
       end
 c-----------------------------------------------------------------------
       subroutine accel_finalize(ierr)
