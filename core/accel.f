@@ -76,19 +76,19 @@ c-----------------------------------------------------------------------
       include 'ACCEL'
       include 'exaf.h'
 
-      real u(1),r(1),sol(1)
+c     it is a bug if sol was declared as sol(1)
+      real*8 u(1),r(1),sol(nx1*ny1*nz1*nelt)
       real tol
       integer maxit,verbose,ierr
 
       integer d_u,d_r
-      integer*8 in_offset,sol_offset
+      integer*8 in_offset,out_offset
       parameter(in_offset=0)
 
       integer nt
       nt=nx1*ny1*nz1*nelt
 
       call exavectorcreate(exa_h,nt,exa_scalar,d_u,ierr)
-      call exavectorwrite (d_u,u,in_offset,ierr)
 
       call exavectorcreate(exa_h,nt,exa_scalar,d_r,ierr)
       call exavectorwrite (d_r,r,in_offset,ierr)
@@ -96,9 +96,9 @@ c-----------------------------------------------------------------------
       call exahmholtzcg(exa_hmhz_h,d_u,d_r,mesh_h,tol,
      $  maxit,verbose,ierr)
 
-      call exavectorread(d_u,sol,sol_offset,ierr)
+      call exavectorread(d_u,sol,out_offset,ierr)
       do i=1,nt
-        u(i)=sol(i+sol_offset)
+        u(i)=sol(i+out_offset)
       enddo
 
       call exavectorfree(d_u,ierr)
