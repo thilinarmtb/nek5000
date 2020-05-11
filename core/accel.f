@@ -58,10 +58,6 @@ c-----------------------------------------------------------------------
           geom(i,5,e)=g6m1 (i,1,1,e)
           geom(i,6,e)=g1m1 (i,1,1,e)
           geom(i,7,e)=jacm1(i,1,1,e)
-#if 0
-          write(6,*) 'G(i)=',geom(i,1,e),geom(i,2,e),geom(i,3,e),
-     $      geom(i,4,e),geom(i,5,e),geom(i,6,e)
-#endif
         enddo
         enddo
       endif
