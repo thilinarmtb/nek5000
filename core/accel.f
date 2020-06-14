@@ -15,6 +15,8 @@ c-----------------------------------------------------------------------
 
       integer n_tot
 
+      call read_state(nekcomm)
+
       call exainit('/occa/gpu/cuda',nekcomm,exa_h,ierr)
 
       call exasettingscreate(exa_h,exa_str_null,settings_h,ierr)

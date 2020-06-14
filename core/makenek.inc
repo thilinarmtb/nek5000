@@ -130,8 +130,10 @@ SOURCE_ROOT_HYPRE="$NEK_SOURCE_ROOT/3rd_party/hypre"
 export SOURCE_ROOT_HYPRE
 SOURCE_ROOT_GPU="$NEK_SOURCE_ROOT/3rd_party/exa"
 export SOURCE_ROOT_GPU
-BUILD_ROOT_GPU="$NEK_SOURCE_ROOT/3rd_party/exa/build"
-export BUILD_ROOT_GPU
+EXA_DIR="$NEK_SOURCE_ROOT/3rd_party/exa/build"
+export EXA_DIR
+EXA_HMHOLTZ_DIR="$NEK_SOURCE_ROOT/3rd_party/exa/build"
+export EXA_HMHOLTZ_DIR
 
 NODEP=1
 if [ "$1" == "-build-dep" ]; then
@@ -366,11 +368,11 @@ do
        echo "FATAL ERROR: Cannot find ${cxx_test} !" && return 11
 
      GPU_OPT="UNDERSCORE=$UNDERSCORE MPI=$MPI"
-     GPU_INC="$BUILD_ROOT_GPU/include"
-     USR_LFLAGS+=" -Wl,-rpath,$BUILD_ROOT_GPU/lib"
-     USR_LFLAGS+=" -L$BUILD_ROOT_GPU/lib -lexaHmholtz"
-     USR_LFLAGS+=" -L$BUILD_ROOT_GPU/lib -lexa"
-     USR_LFLAGS+=" -L$BUILD_ROOT_GPU/lib -locca"
+     GPU_INC="${EXA_HMHOLTZ_DIR}/include"
+     USR_LFLAGS+=" -Wl,-rpath,${EXA_HMHOLTZ_DIR}/lib"
+     USR_LFLAGS+=" -L${EXA_HMHOLTZ_DIR}/lib -lexaHmholtz"
+     USR_LFLAGS+=" -L${EXA_DIR}/lib -lexa"
+     USR_LFLAGS+=" -L${EXA_DIR}/lib -locca"
    fi
 done
 
@@ -648,6 +650,8 @@ fi
 
 declare -a varlist=(
 "NEK_SOURCE_ROOT"
+"EXA_HMHOLTZ_DIR"
+"EXA_DIR"
 "FC"
 "FFLAGS"
 "FCPP"

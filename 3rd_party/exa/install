@@ -3,14 +3,14 @@
 export exa_cflags="${CFLAGS} -fPIC"
 export exa_cxxflags="${CFLAGS} -fPIC"
 export exa_fflags="${FFLAGS}"
-export exa_build_dir="${BUILD_ROOT_GPU}"
+export exa_build_dir="${EXA_DIR}"
 
 function clean_exa_and_deps(){
   local cur_dir=`pwd`
   [ -d occa ] && cd occa       && make clean && cd ${cur_dir}
-  [ -d occa ] && cd gslib      && make clean && cd ${cur_dir}
-  [ -d occa ] && cd exaCore    && make clean && cd ${cur_dir}
-  [ -d occa ] && cd exaHmholtz && make clean && cd ${cur_dir}
+  [ -d gslib ] && cd gslib      && make clean && cd ${cur_dir}
+  [ -d exaCore ] && cd exaCore    && make clean && cd ${cur_dir}
+  [ -d exaHmholtz ] && cd exaHmholtz && make clean && cd ${cur_dir}
 
   rm -rf ${exa_build_dir} 2>/dev/null
   exit 0
