@@ -61,8 +61,8 @@ partitioner.o
 # MXM 
 MXM =  
 ################################################################################
-# ACCEL (GPU)
-ACCEL = accel_f.o accel_c.o
+# DEVICE (GPU)
+DEVICE = device_f.o device_c.o
 ################################################################################
 
 COMM_MPI := comm_mpi.o
@@ -106,7 +106,7 @@ OPT_INCDIR += -I $(SCMT)
 endif
 
 ifneq ($(GPU),0)
-	TMP1 += $(ACCEL)
+	TMP1 += $(DEVICE)
 endif
 
 OPT_INCDIR += -I $S/experimental
@@ -259,8 +259,9 @@ $(OBJDIR)/mxm_wrapper.o	  :$S/mxm_wrapper.f;		$(FC) -c $(FL2) $< -o $@
 $(OBJDIR)/mxm_std.o	  :$S/mxm_std.f;		$(FC) -c $(FL3) $< -o $@
 $(OBJDIR)/mxm_bgq.o	  :$S/mxm_bgq.f;		$(FC) -c $(FL3) $< -o $@
 
-# ACCEL ############################################################################
-$(OBJDIR)/accel_f.o  :$(S)/accel.f; $(FC) -c $(FL2) $< -o $@ $(GPU_IFLAGS)
+# DEVICE ############################################################################
+$(OBJDIR)/device_f.o  :$(S)/device.f; $(FC) -c $(FL2) $< -o $@ $(GPU_IFLAGS)
+$(OBJDIR)/device_c.o  :$(S)/device.c; $(CC) -c $(cFL2) $(GSLIB_IFLAGS) $(GPU_IFLAGS) $< -o $@
 
 # C Files ##################################################################################
 $(OBJDIR)/byte.o             :$S/byte.c;              $(CC) -c $(cFL2) $< -o $@
@@ -271,7 +272,6 @@ $(OBJDIR)/crs_amg.o          :$S/crs_amg.c;           $(CC) -c $(cFL2) $(GSLIB_I
 $(OBJDIR)/fem_amg_preco.o    :$S/experimental/fem_amg_preco.c; $(CC) -c $(cFL2) $(GSLIB_IFLAGS) $(HYPRE_IFLAGS) $< -o $@
 $(OBJDIR)/crs_hypre.o        :$S/experimental/crs_hypre.c; $(CC) -c $(cFL2) $(GSLIB_IFLAGS) $(HYPRE_IFLAGS) $< -o $@
 $(OBJDIR)/partitioner.o      :$S/partitioner.c;       $(CC) -c $(cFL2) $(GSLIB_IFLAGS) $(PARRSB_IFLAGS) $< -o $@
-$(OBJDIR)/accel_c.o          :$S/accel.c;             $(CC) -c $(cFL2) $(GSLIB_IFLAGS) $(GPU_IFLAGS) $< -o $@
 
 # 3rd party #######################################################################################
 $(OBJDIR)/visit.o        :$S/3rd_party/visit.f;		$(FC) -c $(VISIT_IFLAGS) $(FL2) $< -o $@

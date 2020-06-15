@@ -1,8 +1,8 @@
 c-----------------------------------------------------------------------
-      subroutine accel_setup(glo_num,ierr)
+      subroutine device_setup(glo_num,ierr)
       include 'SIZE'
       include 'TOTAL'
-      include 'ACCEL'
+      include 'DEVICE'
 
       include 'exaf.h'
 
@@ -73,9 +73,9 @@ c-----------------------------------------------------------------------
       return
       end
 c-----------------------------------------------------------------------
-      subroutine accel_cg(u,r,tol,maxit,verbose,ierr)
+      subroutine device_cg(u,r,tol,maxit,verbose,ierr)
       include 'SIZE'
-      include 'ACCEL'
+      include 'DEVICE'
       include 'exaf.h'
 
 c     it is a bug if sol was declared as sol(1)
@@ -107,8 +107,8 @@ c     it is a bug if sol was declared as sol(1)
       call exavectorfree(d_r,ierr)
       end
 c-----------------------------------------------------------------------
-      subroutine accel_finalize(ierr)
-      include 'ACCEL'
+      subroutine device_finalize(ierr)
+      include 'DEVICE'
       include 'exaf.h'
 
       integer ierr

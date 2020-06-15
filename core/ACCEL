@@ -1,5 +1,0 @@
-c
-c Handle relared to accelerator code
-c
-      integer        ifaccel,exa_h,exa_hmhz_h,mesh_h,settings_h
-      common /accel/ ifaccel,exa_h,exa_hmhz_h,mesh_h,settings_h

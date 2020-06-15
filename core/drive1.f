@@ -8,7 +8,7 @@ c
       include 'OPCTR'
       include 'CTIMER'
 c
-      include 'ACCEL'
+      include 'DEVICE'
 c
 C     used scratch arrays
 C     NOTE: no initial declaration needed. Linker will take 
@@ -160,13 +160,13 @@ c      COMMON /SCRCG/ DUMM10(LX1,LY1,LZ1,LELT,1)
       call opcount(2)
 
 #if defined(GPU)
-      ifaccel=1
+      ifdevice=1
 #else
-      ifaccel=0
+      ifdevice=0
 #endif
 
-      if(ifaccel.eq.1) then
-        call accel_setup(glo_num,ierr)
+      if(ifdevice.eq.1) then
+        call device_setup(glo_num,ierr)
         if((ierr.eq.0).and.(nid.eq.0)) then
           write(6,*) 'Finished initializing GPU.'
         endif
@@ -353,7 +353,7 @@ c-----------------------------------------------------------------------
 
       include 'SIZE'
       include 'TOTAL'
-      include 'ACCEL'
+      include 'DEVICE'
 
       integer ierr
 
@@ -365,8 +365,8 @@ c      else
 c         call fgslib_crs_free(xxth(1))
 c      endif
 
-      if(ifaccel.eq.1) then
-        call accel_finalize(ierr)
+      if(ifdevice.eq.1) then
+        call device_finalize(ierr)
         if((ierr.eq.0).and.(nid.eq.0)) then
           write(6,*) 'Finished Finalizing GPU.'
         endif
