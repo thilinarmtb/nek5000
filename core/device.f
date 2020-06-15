@@ -6,18 +6,33 @@ c-----------------------------------------------------------------------
 
       include 'exaf.h'
 
-      integer*8 glo_num(1)
-      integer ierr
-
       common /nekmpi/mid,mp,nekcomm,nekgroup,nekreal
+
+      integer*8 glo_num(1)
+      integer n_tot,ierr,l
 
       real geom(lx1*ly1*lz1,7,lelt)
 
-      integer n_tot
+      character*132 backend_string
+      character*1   bs(132)
+      equivalence   (bs,backend_string)
+
+      character*32  rank_string
 
       call read_state(nekcomm)
 
-      call exainit('/occa/gpu/cuda',nekcomm,exa_h,ierr)
+      if(backend.eq.1) then
+        backend_string='/occa/gpu/cuda'
+      else if(backend.eq.2) then
+        backend_string='/occa/gpu/opencl'
+      endif
+      
+      write(rank_string,"(A1,I12)") "/",mid 
+      if(device_id.eq.1) then
+        l=len(trim(backend_string))
+        call chcopy(bs(l+1),rank_string,32)
+      endif
+      call exainit(trim(backend_string),nekcomm,exa_h,ierr)
 
       call exasettingscreate(exa_h,exa_str_null,settings_h,ierr)
       call exasettingssetint('general::order',nx1,settings_h,ierr)
