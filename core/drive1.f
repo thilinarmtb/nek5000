@@ -159,13 +159,7 @@ c      COMMON /SCRCG/ DUMM10(LX1,LY1,LZ1,LELT,1)
       call time00       !     Initalize timers to ZERO
       call opcount(2)
 
-#if defined(GPU)
-      ifdevice=1
-#else
-      ifdevice=0
-#endif
-
-      if(ifdevice.eq.1) then
+      if(backend.gt.0) then
         call device_setup(glo_num,ierr)
         if((ierr.eq.0).and.(nid.eq.0)) then
           write(6,*) 'Finished initializing GPU.'
@@ -365,7 +359,7 @@ c      else
 c         call fgslib_crs_free(xxth(1))
 c      endif
 
-      if(ifdevice.eq.1) then
+      if(backend.gt.0) then
         call device_finalize(ierr)
         if((ierr.eq.0).and.(nid.eq.0)) then
           write(6,*) 'Finished Finalizing GPU.'

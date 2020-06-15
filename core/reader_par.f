@@ -8,6 +8,7 @@ C
       INCLUDE 'RESTART'
       INCLUDE 'PARALLEL'
       INCLUDE 'CTIMER'
+      INCLUDE 'DEVICE'
 c
       logical ifbswap
 
@@ -40,6 +41,7 @@ C
       INCLUDE 'RESTART'
       INCLUDE 'PARALLEL'
       INCLUDE 'CTIMER'
+      INCLUDE 'DEVICE'
 
       loglevel = 1
       optlevel = 1
@@ -187,6 +189,9 @@ C
       ifdp0dt   = .false.
       ifreguo   = .false.   ! dump on the GLL mesh
 
+      backend   = 0
+      device_id = 1
+
       fem_amg_param(1) = 0
       crs_param(1) = 0
 
@@ -215,6 +220,7 @@ c     - mhd support
       INCLUDE 'PARALLEL'
       INCLUDE 'CTIMER'
       INCLUDE 'TSTEP'
+      INCLUDE 'DEVICE'
 
       character*132 c_out,txt, txt2
 
@@ -822,6 +828,35 @@ c set restart options
          if(index(initc(i),'0') .eq. 1) call blank(initc(i),132)
       enddo
 
+c set device options
+      call finiparser_getString(c_out,'device:backend',ifnd)
+      if (ifnd .eq. 1) then
+        call capit(c_out,132)
+        if (index(c_out,'CUDA') .eq. 1) then
+          backend = 1
+        else if (index(c_out,'OPENCL') .eq. 1) then
+          backend = 2
+        else if (index(c_out,'SERIAL') .eq. 1) then
+          backend = 0
+        else
+           write(6,*) 'value: ',trim(c_out)
+           write(6,*) 'is invalid for device:backend!'
+           goto 999
+        endif
+      endif
+      call finiparser_getString(c_out,'device:id',ifnd)
+      if (ifnd .eq. 1) then
+        call capit(c_out,132)
+        if (index(c_out,'RANK') .eq. 1) then
+          device_id = 1
+        else if (index(c_out,'AUTO') .eq. 1) then
+          device_id = 2
+        else
+           write(6,*) 'value: ',trim(c_out)
+           write(6,*) 'is invalid for device:id !'
+           goto 999
+        endif
+      endif
 
 100   if(ierr.eq.0) call finiparser_dump()
       return
@@ -845,6 +880,7 @@ C
       INCLUDE 'CTIMER'
       INCLUDE 'ADJOINT'
       INCLUDE 'CVODE'
+      INCLUDE 'DEVICE'
 
       call bcast(loglevel, isize)
       call bcast(optlevel, isize)
@@ -896,6 +932,10 @@ C
       call bcast(initc, 15*132*csize) 
 
       call bcast(timeioe,sizeof(timeioe))
+
+c device options
+      call bcast(backend  ,isize)
+      call bcast(device_id,isize)
 
 c set some internals 
       if (ldim.eq.3) if3d=.true.

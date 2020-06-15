@@ -1,5 +1,7 @@
 c
 c Handles related to device configurations
 c
-      integer         ifdevice,exa_h,exa_hmhz_h,mesh_h,settings_h
-      common /device/ ifdevice,exa_h,exa_hmhz_h,mesh_h,settings_h
+      integer         backend,device_id,exa_h,exa_hmhz_h,
+     $  mesh_h,settings_h
+      common /device/ backend,device_id,exa_h,exa_hmhz_h,
+     $  mesh_h,settings_h
