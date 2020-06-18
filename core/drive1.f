@@ -161,9 +161,6 @@ c      COMMON /SCRCG/ DUMM10(LX1,LY1,LZ1,LELT,1)
 
       if(backend.gt.0) then
         call device_setup(glo_num,ierr)
-        if((ierr.eq.0).and.(nid.eq.0)) then
-          write(6,*) 'Finished initializing GPU.'
-        endif
       endif
 
       ntdump=0
@@ -361,9 +358,6 @@ c      endif
 
       if(backend.gt.0) then
         call device_finalize(ierr)
-        if((ierr.eq.0).and.(nid.eq.0)) then
-          write(6,*) 'Finished Finalizing GPU.'
-        endif
       endif
 
       call in_situ_end()

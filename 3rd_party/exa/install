@@ -7,9 +7,9 @@ export exa_build_dir="${EXA_DIR}"
 
 function clean_exa_and_deps(){
   local cur_dir=`pwd`
-  [ -d occa ] && cd occa       && make clean && cd ${cur_dir}
-  [ -d gslib ] && cd gslib      && make clean && cd ${cur_dir}
-  [ -d exaCore ] && cd exaCore    && make clean && cd ${cur_dir}
+  [ -d occa ] &&       cd occa       && make clean && cd ${cur_dir}
+  [ -d gslib ] &&      cd gslib      && make clean && cd ${cur_dir}
+  [ -d exaCore ] &&    cd exaCore    && make clean && cd ${cur_dir}
   [ -d exaHmholtz ] && cd exaHmholtz && make clean && cd ${cur_dir}
 
   rm -rf ${exa_build_dir} 2>/dev/null
@@ -62,7 +62,7 @@ function build_exa(){
   export EXA_DIR=${exa_build_dir}
 
   [ ! -d exaHmholtz ] && \
-    (git clone https://github.com/thilinarmtb/exaHmholtz.git -b cg || exit_err ${LINENO})
+    (git clone https://github.com/thilinarmtb/exaHmholtz.git || exit_err ${LINENO})
 
   cd exaHmholtz
   CC="${CC}" CFLAGS="${exa_cflags}" FC="${FC}" FFLAGS="${exa_fflags}" \
