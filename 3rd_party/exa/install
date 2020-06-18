@@ -23,11 +23,13 @@ function exit_err(){
 
 function build_occa(){
   local cur_dir=`pwd`
+  local commit=06ff328
 
   [ ! -d occa ] && \
     (git clone https://github.com/libocca/occa.git || exit_err ${LINENO})
 
   cd occa
+  git checkout -b nek ${commit}
   CXX="${CXX}" CXXFLAGS="${exa_cxxflags}" make\
     PREFIX="${exa_build_dir}" -j4 all || exit_err ${LINENO}
   cd ${cur_dir}
