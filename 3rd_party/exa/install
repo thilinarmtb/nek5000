@@ -29,7 +29,7 @@ function build_occa(){
     (git clone https://github.com/libocca/occa.git || exit_err ${LINENO})
 
   cd occa
-  git checkout -b nek ${commit}
+  git checkout ${commit}
   CXX="${CXX}" CXXFLAGS="${exa_cxxflags}" make\
     PREFIX="${exa_build_dir}" -j4 all || exit_err ${LINENO}
   cd ${cur_dir}
@@ -77,6 +77,7 @@ function build_exa(){
 [ $# -eq 1 ] && [ "$1" = "clean" ] && clean_exa_and_deps
 
 echo "Building exa libraries ..."
+mkdir -p ${exa_build_dir}
 build_occa
 build_gslib
 build_exa
