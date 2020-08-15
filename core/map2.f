@@ -181,18 +181,25 @@ c-----------------------------------------------------------------------
         if (np-i.eq.nid) nelt = nelt + 1
       enddo
       call byte_open_mpi(re2fle,fh_re2,.true.,ierr)
-      call readp_re2_mesh(ifbswap, .false.)
+      call readp_re2_mesh(ifbswap,.false.)
+      ifield=1
+      call readp_re2_bc(cbc(1,1,ifield),bc(1,1,1,ifield),ifbswap,
+     &  .false.)
       call byte_close_mpi(fh_re2,ierr)
 
-      call read_con(wk,size(wk),neli,nvi,nelgti,nelgvi)
-      if (nvi .ne. nlv)
-     $   call exitti('Number of vertices do not match!$',nv)
-      if (nelgti .ne. nelgt)
-     $   call exitti('nelgt for mesh/con differs!$',0)
-      if (nelgvi .ne. nelgv)
-     $   call exitti('nelgt for mesh/con differs!$',0)
-      if (neli .gt. lelt)
-     $   call exitti('neli > lelt!$',neli)
+      call read_con(wk,size(wk),neli,nvi,nelgti,nelgvi,ierr)
+      if(ierr.eq.0) then
+        if (nvi .ne. nlv)
+     $     call exitti('Number of vertices do not match!$',nv)
+        if (nelgti .ne. nelgt)
+     $     call exitti('nelgt for mesh/con differs!$',0)
+        if (nelgvi .ne. nelgv)
+     $     call exitti('nelgt for mesh/con differs!$',0)
+        if (neli .gt. lelt)
+     $     call exitti('neli > lelt!$',neli)
+      else
+        call calc_con(wk,size(wk),ierr)
+      endif
 
 c fluid elements
       j  = 0
@@ -328,13 +335,13 @@ c solid elements
       return
       end
 c-----------------------------------------------------------------------
-      subroutine read_con(wk,nwk,nelr,nv,nelgti,nelgvi)
+      subroutine read_con(wk,nwk,nelr,nv,nelgti,nelgvi,ierr)
 
       include 'SIZE'
       include 'INPUT'
       include 'PARALLEL'
 
-      integer wk(nwk)
+      integer wk(nwk),ierr
 
       logical ifbswap,if_byte_swap_test
       logical ifco2, ifcon
@@ -426,9 +433,64 @@ c    1       format(a5,2i12,i2)
       return
 
  100  continue
-      call err_chk(ierr,'Error opening or reading con header$')
-
+      write(6,*) 'Failed to open/read con file.'
       return
+
+      end
+c-----------------------------------------------------------------------
+      subroutine calc_con(wk,nwk,ierr)
+
+      include 'SIZE'
+      include 'INPUT'
+      include 'PARALLEL'
+
+      integer nwk,ierr
+      integer wk(nwk)
+
+      common /nekmpi/ mid,mp,nekcomm,nekgroup,nekreal
+      common /SCRCG/ xyz(ldim*lelt*2**ldim)
+
+      integer*8 eid8(4*lelt),vtx8(lelt*2**ldim)
+      common /ctmp0/ eid8, vtx8, iwork
+
+      integer nperiodic,nv,i,j,k
+      integer*8 start
+      real*8 tol
+
+      write(6,*) 'Calculating parallel connectivity ...'
+
+      nperiodic=0
+      nv=2*ndim
+
+      k=0
+      do i=1,nelt
+        do j=1,nv
+          xyz(k+1)=xc(j,i)
+          xyz(k+2)=yc(j,i)
+          if(ndim.eq.3) then
+            xyz(k+3)=zc(j,i)
+            k=k+3
+          else
+            k=k+2
+          endif
+        enddo
+      enddo
+
+      start=igl_running_sum(nelt)-nelt
+
+      ierr=0
+      tol=1e-3
+
+      !TODO
+      !calculate number of periodic pairs
+
+      call fparrsb_findConnectivity(vtx8,xyz,nelt,ndim,
+     $  eid8,nperiodic,tol,nekcomm,ierr)
+
+      do i=1,nelt*nv
+        wk(i)=vtx8(i)
+      enddo
+
       end
 c-----------------------------------------------------------------------
 

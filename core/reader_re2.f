@@ -39,7 +39,8 @@ c-----------------------------------------------------------------------
       call readp_re2_mesh (ifbswap, .true.)
       call readp_re2_curve(ifbswap)
       do ifield = ibc,nfldt
-         call readp_re2_bc(cbc(1,1,ifield),bc(1,1,1,ifield),ifbswap)
+         call readp_re2_bc(cbc(1,1,ifield),bc(1,1,1,ifield),ifbswap,
+     &     .true.)
       enddo
 
       call fgslib_crystal_free(cr_re2)
@@ -243,14 +244,14 @@ c-----------------------------------------------------------------------
 
       end
 c-----------------------------------------------------------------------
-      subroutine readp_re2_bc(cbl,bl,ifbswap)
+      subroutine readp_re2_bc(cbl,bl,ifbswap,ifdist)
 
       include 'SIZE'
       include 'TOTAL'
 
       character*3  cbl(  6,lelt)
       real         bl (5,6,lelt)
-      logical      ifbswap
+      logical      ifbswap,ifdist
 
       parameter(nrmax = 6*lelt) ! maximum number of records
       parameter(lrs   = 2+1+5)  ! record size: eg iside bl(5) cbl
@@ -334,8 +335,11 @@ c-----------------------------------------------------------------------
       ! crystal route nr real items of size lrs to rank vi(key,1:nr)
       n    = nr
       key  = 1
-      call fgslib_crystal_tuple_transfer(cr_re2,n,nrmax,vi,li,vl,0,vr,0,
-     &                                   key)
+
+      if(ifdist.eqv..true.) then
+        call fgslib_crystal_tuple_transfer(cr_re2,n,nrmax,vi,li,
+     &     vl,0,vr,0,key)
+      endif
 
       ! unpack buffer
       if(n.gt.nrmax) goto 100
