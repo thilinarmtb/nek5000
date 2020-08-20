@@ -173,6 +173,8 @@ c-----------------------------------------------------------------------
       integer opt_parrsb(3), opt_parmetis(10)
       logical ifbswap
 
+      integer start
+
 #if defined(PARRSB) || defined(PARMETIS)
       ! read vertex coordinates
       call read_re2_hdr(ifbswap, .false.)
@@ -180,26 +182,28 @@ c-----------------------------------------------------------------------
       do i = 1,mod(nelgt,np)
         if (np-i.eq.nid) nelt = nelt + 1
       enddo
+      neli=nelt
+
+      start=igl_running_sum(nelt)
+      do i=1,nelt
+        lglel(i)=start-nelt+i
+      enddo
+
+      do i = 1,nelt
+         ieg = lglel(i)
+         if (ieg.lt.1 .or. ieg.gt.nelgt)
+     $      call exitti('invalid ieg!$',ieg)
+         ibuf(1) = i
+         ibuf(2) = nid
+         call dProcmapPut(ibuf,2,0,ieg)
+      enddo
+
       call byte_open_mpi(re2fle,fh_re2,.true.,ierr)
       call readp_re2_mesh(ifbswap,.false.)
-      ifield=1
-      call readp_re2_bc(cbc(1,1,ifield),bc(1,1,1,ifield),ifbswap,
-     &  .false.)
+      call readp_re2_bc(cbc(1,1,1),bc(1,1,1,1),ifbswap,.false.)
       call byte_close_mpi(fh_re2,ierr)
 
-      call read_con(wk,size(wk),neli,nvi,nelgti,nelgvi,ierr)
-      if(ierr.eq.0) then
-        if (nvi .ne. nlv)
-     $     call exitti('Number of vertices do not match!$',nv)
-        if (nelgti .ne. nelgt)
-     $     call exitti('nelgt for mesh/con differs!$',0)
-        if (nelgvi .ne. nelgv)
-     $     call exitti('nelgt for mesh/con differs!$',0)
-        if (neli .gt. lelt)
-     $     call exitti('neli > lelt!$',neli)
-      else
-        call calc_con(wk,size(wk),ierr)
-      endif
+      call read_con(wk,size(wk),nelgt,nelgv,nelt,nlv,ierr)
 
 c fluid elements
       j  = 0
@@ -335,12 +339,13 @@ c solid elements
       return
       end
 c-----------------------------------------------------------------------
-      subroutine read_con(wk,nwk,nelr,nv,nelgti,nelgvi,ierr)
+      subroutine read_con(wk,nwk,melgt,melgv,melt,mv,ierr)
 
       include 'SIZE'
       include 'INPUT'
       include 'PARALLEL'
 
+      integer nwk,melgt,melgv,melt,mv
       integer wk(nwk),ierr
 
       logical ifbswap,if_byte_swap_test
@@ -354,6 +359,7 @@ c-----------------------------------------------------------------------
       character*5   version
       real*4        test
 
+      integer nelgti,nelgvi,nv
       integer*8 offs, offs0
 
       ierr = 0
@@ -379,61 +385,93 @@ c-----------------------------------------------------------------------
       endif
       call bcast(confle,sizeof(confle))
       if(nid.eq.0) write(6,'(A,A)') ' reading ', confle
-      call err_chk(ierr,' Cannot find con file!$')
+
       call bcast(ifco2,lsize)
       ierr = 0
-
       ! read header
       if (nid.eq.0) then
          if (ifco2) then
             call byte_open(confle,ierr)
-            if(ierr.ne.0) goto 100
+            if(ierr.ne.0) goto 50
 
             call blank(hdr,sizeof(hdr))
             call byte_read(hdr,sizeof(hdr)/4,ierr)
-            if(ierr.ne.0) goto 100
+            if(ierr.ne.0) goto 50
 
             read (hdr,*) version,nelgti,nelgvi,nv
 c    1       format(a5,2i12,i2)
 
             call byte_read(test,1,ierr)
-            if(ierr.ne.0) goto 100
+            if(ierr.ne.0) goto 50
             ifbswap = if_byte_swap_test(test,ierr)
-            if(ierr.ne.0) goto 100
+            if(ierr.ne.0) then
+              goto 50
+            endif
+         else
+            ierr=1
+            goto 50
          endif
       endif
-      call bcast(nelgti,sizeof(nelgti))
-      call bcast(nelgvi,sizeof(nelgvi))
-      call bcast(nv,sizeof(nv))
-      call bcast(ifbswap,sizeof(ifbswap))
 
-      if (ifco2 .and. ifmpiio) then
-         if (nid.eq.0) call byte_close(ierr)
-         call byte_open_mpi(confle,ifh,.true.,ierr)
-         offs0 = sizeof(hdr) + sizeof(test)
-
-         nelr = nelgti/np
-         do i = 1,mod(nelgti,np)
-            if (np-i.eq.nid) nelr = nelr + 1
-         enddo
-         call lim_chk(nelr*(nv+1),nwk,'nelr ','nwk   ','read_con  ')
-
-         nelBr = igl_running_sum(nelr) - nelr
-         offs  = offs0 + int(nelBr,8)*(nv+1)*ISIZE
-
-         call byte_set_view(offs,ifh)
-         call byte_read_mpi(wk,(nv+1)*nelr,-1,ifh,ierr)
-         call err_chk(ierr,' Error while reading con file!$')
-         call byte_close_mpi(ifh,ierr)
-         if (ifbswap) call byte_reverse(wk,(nv+1)*nelr,ierr)
+ 50   continue
+      call bcast(ierr,sizeof(ierr))
+      if(ierr.ne.0) then
+#if defined(PARRSB)
+        call calc_con(wk,size(wk),ierr)
+#else
+        goto 100
+#endif
       else
-         call exitti('reader only support co2 for now$',0)
+        call bcast(nelgti,sizeof(nelgti))
+        call bcast(nelgvi,sizeof(nelgvi))
+        call bcast(nv,sizeof(nv))
+        call bcast(ifbswap,sizeof(ifbswap))
+
+        if (nv .ne. mv)
+     $     call exitti('Number of vertices do not match!$',nv)
+        if (nelgti .ne. melgt)
+     $     call exitti('nelgt for mesh/con differs!$',0)
+        if (nelgvi .ne. melgv)
+     $     call exitti('nelgt for mesh/con differs!$',0)
+
+        if(ifco2 .and. ifmpiio) then
+          if (nid.eq.0) call byte_close(ierr)
+          call byte_open_mpi(confle,ifh,.true.,ierr)
+          offs0 = sizeof(hdr) + sizeof(test)
+
+          nelr = nelgti/np
+          do i = 1,mod(nelgti,np)
+             if (np-i.eq.nid) nelr = nelr + 1
+          enddo
+          call lim_chk(nelr*(nv+1),nwk,'nelr ','nwk   ','read_con  ')
+          if(nelr .ne. melt)
+     $      call exitti('nelt for mesh/con differs!$',0)
+          if(nelr .gt. lelt)
+     $      call exitti('nelr > lelt!$',nelr)
+
+          nelBr = igl_running_sum(nelr) - nelr
+          offs  = offs0 + int(nelBr,8)*(nv+1)*ISIZE
+
+          call byte_set_view(offs,ifh)
+          call byte_read_mpi(wk,(nv+1)*nelr,-1,ifh,ierr)
+          if(ierr.ne.0) goto 100
+          call byte_close_mpi(ifh,ierr)
+          if (ifbswap) then
+            call byte_reverse(wk,(nv+1)*nelr,ierr)
+          endif
+        else
+#if defined(PARRSB)
+          call calc_con(wk,size(wk),ierr)
+#else
+          goto 100
+#endif
+        endif
       endif
 
       return
 
  100  continue
-      write(6,*) 'Failed to open/read con file.'
+      call err_chk(ierr,'Error opening/reading con file$')
       return
 
       end
@@ -453,14 +491,17 @@ c-----------------------------------------------------------------------
       integer*8 eid8(4*lelt),vtx8(lelt*2**ldim)
       common /ctmp0/ eid8, vtx8, iwork
 
-      integer nperiodic,nv,i,j,k
+      integer nperiodic,nv,nf,i,j,k,ifield
       integer*8 start
       real*8 tol
 
-      write(6,*) 'Calculating parallel connectivity ...'
-
       nperiodic=0
-      nv=2*ndim
+      nv=2**ndim
+      nf=2*ndim
+
+      if(nid.eq.0) then
+        write(6,*) 'Calculating connectivity ...',nelt,ndim,nv
+      endif
 
       k=0
       do i=1,nelt
@@ -479,15 +520,23 @@ c-----------------------------------------------------------------------
       start=igl_running_sum(nelt)-nelt
 
       ierr=0
-      tol=1e-3
+      tol=1e-2
 
-      !TODO
       !calculate number of periodic pairs
+      do i=1,nelt
+        do j=1,nf
+          write(6,*) cbc(j,i,1)
+          if(cbc(j,i,1).eq.'P  ') then
+            write(6,*) 'Periodic face detected: ',i,j
+            nperiodic=nperiodic+1
+          endif
+        enddo
+      enddo
 
       call fparrsb_findConnectivity(vtx8,xyz,nelt,ndim,
      $  eid8,nperiodic,tol,nekcomm,ierr)
 
-      do i=1,nelt*nv
+      do i=1,nelt*(nv+1)
         wk(i)=vtx8(i)
       enddo
 

@@ -36,11 +36,11 @@ c-----------------------------------------------------------------------
       call byte_open_mpi(re2fle,fh_re2,.true.,ierr)
       call err_chk(ierr,' Cannot open .re2 file!$')
 
-      call readp_re2_mesh (ifbswap, .true.)
+      call readp_re2_mesh (ifbswap,.true.)
       call readp_re2_curve(ifbswap)
       do ifield = ibc,nfldt
-         call readp_re2_bc(cbc(1,1,ifield),bc(1,1,1,ifield),ifbswap,
-     &     .true.)
+        call readp_re2_bc(cbc(1,1,ifield),bc(1,1,1,ifield),
+     &    ifbswap,.true.)
       enddo
 
       call fgslib_crystal_free(cr_re2)
@@ -313,6 +313,13 @@ c-----------------------------------------------------------------------
       re2off_b = re2off_b + nrg*4*lrs4
       if(ierr.gt.0) goto 100
 
+      if (.not.ifdist) then
+        do i = 1,nr
+           call buf_to_bc(cbl,bl,bufr)
+        enddo
+        return
+      endif
+
       ! pack buffer
       do i = 1,nr
          jj = (i-1)*lrs4 + 1
@@ -336,10 +343,8 @@ c-----------------------------------------------------------------------
       n    = nr
       key  = 1
 
-      if(ifdist.eqv..true.) then
-        call fgslib_crystal_tuple_transfer(cr_re2,n,nrmax,vi,li,
-     &     vl,0,vr,0,key)
-      endif
+      call fgslib_crystal_tuple_transfer(cr_re2,n,nrmax,vi,li,
+     &   vl,0,vr,0,key)
 
       ! unpack buffer
       if(n.gt.nrmax) goto 100
@@ -458,7 +463,7 @@ c-----------------------------------------------------------------------
         call copy4r ( bl(1,f,e),buf(3),5)
         call chcopy (cbl(  f,e),buf(8),3)
 
-        if (nelgt.ge.1 000 000.and.cbl(f,e).eq.'P  ') 
+        if (nelgt.ge.1000000.and.cbl(f,e).eq.'P  ')
      $     bl(1,f,e) = buf(3) ! Integer assign of connecting periodic element
       endif
 
