@@ -174,25 +174,14 @@ c-----------------------------------------------------------------------
       logical ifbswap
 
 #if defined(PARRSB) || defined(PARMETIS)
-      ! read vertex coordinates
-      call read_re2_hdr(ifbswap, .false.)
-      nelt = nelgt/np
-      do i = 1,mod(nelgt,np)
-        if (np-i.eq.nid) nelt = nelt + 1
-      enddo
-      call byte_open_mpi(re2fle,fh_re2,.true.,ierr)
-      call readp_re2_mesh(ifbswap, .false.)
-      call byte_close_mpi(fh_re2,ierr)
-
-      call read_con(wk,size(wk),neli,nvi,nelgti,nelgvi)
+      neli = nelt
+      call get_con(wk,size(wk),neli,nvi,nelgti,nelgvi)
       if (nvi .ne. nlv)
      $   call exitti('Number of vertices do not match!$',nv)
       if (nelgti .ne. nelgt)
      $   call exitti('nelgt for mesh/con differs!$',0)
       if (nelgvi .ne. nelgv)
      $   call exitti('nelgt for mesh/con differs!$',0)
-      if (neli .gt. lelt)
-     $   call exitti('neli > lelt!$',neli)
 
 c fluid elements
       j  = 0
@@ -328,7 +317,7 @@ c solid elements
       return
       end
 c-----------------------------------------------------------------------
-      subroutine read_con(wk,nwk,nelr,nv,nelgti,nelgvi)
+      subroutine get_con(wk,nwk,nelr,nv,nelgti,nelgvi)
 
       include 'SIZE'
       include 'INPUT'
@@ -350,6 +339,7 @@ c-----------------------------------------------------------------------
       integer*8 offs, offs0
 
       ierr = 0
+
       ifco2 = .false.
       ifmpiio = .true.
 #ifdef NOMPIIO
@@ -370,6 +360,12 @@ c-----------------------------------------------------------------------
 
         if(.not.ifcon .and. .not.ifco2) ierr = 1
       endif
+
+c      if(ierr.eq.1) then
+c        call fgenCon(...)
+c        return 
+c      endif
+
       call bcast(confle,sizeof(confle))
       if(nid.eq.0) write(6,'(A,A)') ' reading ', confle
       call err_chk(ierr,' Cannot find con file!$')
@@ -405,10 +401,10 @@ c    1       format(a5,2i12,i2)
          call byte_open_mpi(confle,ifh,.true.,ierr)
          offs0 = sizeof(hdr) + sizeof(test)
 
-         nelr = nelgti/np
-         do i = 1,mod(nelgti,np)
-            if (np-i.eq.nid) nelr = nelr + 1
-         enddo
+c         nelr = nelgti/np
+c         do i = 1,mod(nelgti,np)
+c            if (np-i.eq.nid) nelr = nelr + 1
+c         enddo
          call lim_chk(nelr*(nv+1),nwk,'nelr ','nwk   ','read_con  ')
 
          nelBr = igl_running_sum(nelr) - nelr
@@ -783,10 +779,43 @@ C     physical distribution in an attempt to minimize exposed number of
 C     element interfaces.
 C
       include 'SIZE'
+      include 'PARALLEL'
       include 'INPUT'
 
+      integer ibuf(3)
+      logical ifbswap
+
       call dProcmapInit()  
+
+      call read_re2_hdr(ifbswap, .false.)
+      nelt = nelgt/np
+      do i = 1,mod(nelgt,np)
+        if (np-i.eq.nid) nelt = nelt + 1
+      enddo
+
+      if (nelt .gt. lelt)
+     $   call exitti('nelt > lelt!$',nelt)
+
+      ! setup gllnid + gllel
+      nelB = igl_running_sum(nelt) - nelt
+      write(6,*) 'here nelB nelt', nid, nelB, nelt 
+      do i = 1,nelt
+         ieg = nelB + i
+         lglel(i) = ieg 
+         if (ieg.lt.1 .or. ieg.gt.nelgt)
+     $      call exitti('invalid ieg!$',ieg)
+         ibuf(1) = i
+         ibuf(2) = nid
+         call dProcmapPut(ibuf,2,0,ieg)
+      enddo
+
+      call read_re2_data(ifbswap, .true., .false., .true.)
+
+      nelt_ = nelt
       call get_map() 
+
+      ! not implemented yet - for now we just read the re2 data again
+c     redistribute_re2_data(nelt_)
 
       return
       end
