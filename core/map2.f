@@ -177,14 +177,7 @@ c-----------------------------------------------------------------------
 
 #if defined(PARRSB) || defined(PARMETIS)
       neli = nelt
-      call get_con(wk,size(wk),neli,nvi,nelgti,nelgvi)
-      if (nvi .ne. nlv)
-     $   call exitti('Number of vertices do not match!$',nv)
-      if (nelgti .ne. nelgt)
-     $   call exitti('nelgt for mesh/con differs!$',0)
-      if (nelgvi .ne. nelgv)
-     $   call exitti('nelgt for mesh/con differs!$',0)
-
+      call get_con(wk,size(wk),neli,nlv)
 c fluid elements
       j  = 0
       ii = 0
@@ -319,13 +312,13 @@ c solid elements
       return
       end
 c-----------------------------------------------------------------------
-      subroutine get_con(wk,nwk,nelr,nv,nelgti,nelgvi)
+      subroutine get_con(wk,nwk,nelr,nv)
 
       include 'SIZE'
       include 'INPUT'
       include 'PARALLEL'
 
-      integer nwk
+      integer nwk,nelr,nv
       integer wk(nwk)
 
       logical ifbswap,if_byte_swap_test
@@ -339,11 +332,11 @@ c-----------------------------------------------------------------------
       character*5   version
       real*4        test
 
-      integer ierr,nelr,nv
+      integer ierr,nvi
+      integer*8 nelgti,nelgvi
       integer*8 offs, offs0
 
       ierr = 0
-
       ifco2 = .false.
       ifmpiio = .true.
 #ifdef NOMPIIO
@@ -383,7 +376,7 @@ c-----------------------------------------------------------------------
             call byte_read(hdr,sizeof(hdr)/4,ierr)
             if(ierr.ne.0) goto 100
 
-            read (hdr,*) version,nelgti,nelgvi,nv
+            read (hdr,*) version,nelgti,nelgvi,nvi
 c    1       format(a5,2i12,i2)
 
             call byte_read(test,1,ierr)
@@ -395,8 +388,15 @@ c    1       format(a5,2i12,i2)
 
       call bcast(nelgti,sizeof(nelgti))
       call bcast(nelgvi,sizeof(nelgvi))
-      call bcast(nv,sizeof(nv))
+      call bcast(nvi,sizeof(nvi))
       call bcast(ifbswap,sizeof(ifbswap))
+
+      if (nvi .ne. nv)
+     $   call exitti('Number of vertices do not match!$',0)
+      if (nelgti .ne. nelgt)
+     $   call exitti('nelgt for mesh/con differs!$',0)
+      if (nelgvi .ne. nelgv)
+     $   call exitti('nelgt for mesh/con differs!$',0)
 
       if (ifco2 .and. ifmpiio) then
         if (nid.eq.0) call byte_close(ierr)
@@ -407,16 +407,16 @@ c       nelr = nelgti/np
 c       do i = 1,mod(nelgti,np)
 c          if (np-i.eq.nid) nelr = nelr + 1
 c       enddo
-        call lim_chk(nelr*(nv+1),nwk,'nelr ','nwk   ','read_con  ')
+        call lim_chk(nelr*(nvi+1),nwk,'nelr ','nwk   ','read_con  ')
       else
         nelBr = igl_running_sum(nelr) - nelr
-        offs  = offs0 + int(nelBr,8)*(nv+1)*ISIZE
+        offs  = offs0 + int(nelBr,8)*(nvi+1)*ISIZE
 
         call byte_set_view(offs,ifh)
-        call byte_read_mpi(wk,(nv+1)*nelr,-1,ifh,ierr)
+        call byte_read_mpi(wk,(nvi+1)*nelr,-1,ifh,ierr)
         if(ierr.ne.0) goto 100
         call byte_close_mpi(ifh,ierr)
-        if (ifbswap) call byte_reverse(wk,(nv+1)*nelr,ierr)
+        if (ifbswap) call byte_reverse(wk,(nvi+1)*nelr,ierr)
       endif
 
       return
@@ -446,50 +446,59 @@ c-----------------------------------------------------------------------
       integer*8 eid8(4*lelt),vtx8(lelt*2**ldim)
       common /ctmp0/ eid8, vtx8, iwork
 
-      integer nperiodic,nv,nf,i,j,k,ifield
+      integer npf,nv,nf,i,j,k
       integer*8 start
       real*8 tol
 
-      nperiodic=0
       nv=2**ndim
       nf=2*ndim
 
       if(nid.eq.0) then
-        write(6,*) 'Calculating connectivity ...',nelt,ndim,nv
+        write(6,*) 'Calculating connectivity nelt/ndim:',nelt,ndim
       endif
 
       k=0
-      do i=1,nelt
-        do j=1,nv
-          xyz(k+1)=xc(j,i)
-          xyz(k+2)=yc(j,i)
-          if(ndim.eq.3) then
+      if(ndim.eq.3) then
+        do i=1,nelt
+          do j=1,nv
+            xyz(k+1)=xc(j,i)
+            xyz(k+2)=yc(j,i)
             xyz(k+3)=zc(j,i)
             k=k+3
-          else
-            k=k+2
-          endif
+          enddo
         enddo
-      enddo
-
-      start=igl_running_sum(nelt)-nelt
+      else
+        do i=1,nelt
+          do j=1,nv
+            xyz(k+1)=xc(j,i)
+            xyz(k+2)=yc(j,i)
+            k=k+2
+          enddo
+        enddo
+      endif
 
       ierr=0
+      npf=0
       tol=1e-2
+      start=igl_running_sum(nelt)-nelt
 
       !calculate number of periodic pairs
       do i=1,nelt
         do j=1,nf
-          write(6,*) cbc(j,i,1)
           if(cbc(j,i,1).eq.'P  ') then
-            write(6,*) 'Periodic face detected: ',i,j
-            nperiodic=nperiodic+1
+            eid8(4*npf+1)=i+start
+            eid8(4*npf+2)=j
+            eid8(4*npf+3)=bc(1,j,i,1)
+            eid8(4*npf+4)=bc(2,j,i,1)
+            write(6,*) eid8(4*npf+1),eid8(4*npf+2),
+     $                               eid8(4*npf+3),eid8(4*npf+4)
+            npf=npf+1
           endif
         enddo
       enddo
 
       call fparrsb_findConnectivity(vtx8,xyz,nelt,ndim,
-     $  eid8,nperiodic,tol,nekcomm,ierr)
+     $  eid8,npf,tol,nekcomm,ierr)
 
       do i=1,nelt*(nv+1)
         wk(i)=vtx8(i)
@@ -868,7 +877,6 @@ C
 
       ! setup gllnid + gllel
       nelB = igl_running_sum(nelt) - nelt
-      write(6,*) 'here nelB nelt', nid, nelB, nelt 
       do i = 1,nelt
          ieg = nelB + i
          lglel(i) = ieg 
