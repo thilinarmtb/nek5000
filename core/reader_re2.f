@@ -1,5 +1,5 @@
 c-----------------------------------------------------------------------
-      subroutine read_re2_data(ifbswap)  ! .re2 reader
+      subroutine read_re2_data(ifbswap, ifxyz, ifcur, ifbc)  ! .re2 reader
 
       include 'SIZE'
       include 'TOTAL'
@@ -7,6 +7,7 @@ c-----------------------------------------------------------------------
       include 'CTIMER'
 
       logical ifbswap
+      logical ifxyz, ifcur, ifbc
       integer idummy(100)
 
       common /nekmpi/ nidd,npp,nekcomm,nekgroup,nekreal
@@ -36,11 +37,11 @@ c-----------------------------------------------------------------------
       call byte_open_mpi(re2fle,fh_re2,.true.,ierr)
       call err_chk(ierr,' Cannot open .re2 file!$')
 
-      call readp_re2_mesh (ifbswap,.true.)
-      call readp_re2_curve(ifbswap)
+      call readp_re2_mesh (ifbswap,ifxyz)
+      call readp_re2_curve(ifbswap,ifcur)
       do ifield = ibc,nfldt
         call readp_re2_bc(cbc(1,1,ifield),bc(1,1,1,ifield),
-     &    ifbswap,.true.)
+     &    ifbswap,ifbc)
       enddo
 
       call fgslib_crystal_free(cr_re2)
@@ -66,12 +67,13 @@ c-----------------------------------------------------------------------
       return
       end
 c-----------------------------------------------------------------------
-      subroutine readp_re2_mesh(ifbswap, ifdistri) ! version 2 of .re2 reader
+      subroutine readp_re2_mesh(ifbswap,ifread) ! version 2 of .re2 reader
 
       include 'SIZE'
       include 'TOTAL'
 
-      logical ifbswap, ifdistri
+      logical ifbswap
+      logical ifread
 
       parameter(nrmax = lelt)             ! maximum number of records
       parameter(lrs   = 1+ldim*(2**ldim)) ! record size: group x(:,c) ...
@@ -85,8 +87,6 @@ c-----------------------------------------------------------------------
 
       integer*8       lre2off_b,dtmp8
       integer*8       nrg
-
-      if (nio.eq.0) write(6,*) 'reading mesh '
 
       nrg       = nelgt
       nr        = nelt
@@ -103,12 +103,9 @@ c-----------------------------------------------------------------------
       re2off_b = re2off_b + nrg*4*lrs4
       if (ierr.gt.0) goto 100
 
-      if (.not.ifdistri) then
-        do i = 1,nr
-           call buf_to_xyz(bufr(1,i),i,ifbswap,ierr)
-        enddo
-        return
-      endif
+      if (.not.ifread) return
+
+      if (nio.eq.0) write(6,*) 'reading mesh '
 
       ! pack buffer
       do i = 1,nr
@@ -143,12 +140,13 @@ c-----------------------------------------------------------------------
       return
       end
 c-----------------------------------------------------------------------
-      subroutine readp_re2_curve(ifbswap)
+      subroutine readp_re2_curve(ifbswap,ifread)
 
       include 'SIZE'
       include 'TOTAL'
 
       logical ifbswap
+      logical ifread
 
       common /nekmpi/ nidd,npp,nekcomm,nekgroup,nekreal
 
@@ -185,7 +183,6 @@ c-----------------------------------------------------------------------
       re2off_b = re2off_b + 4*nwds4r
 
       if(nrg.eq.0) return
-      if(nio.eq.0) write(6,*) 'reading curved sides '
 
       ! read data from file
       dtmp8 = np
@@ -198,11 +195,14 @@ c-----------------------------------------------------------------------
       lre2off_b = re2off_b + dtmp8*lrs*wdsizi
       lrs4      = lrs*wdsizi/4
 
+      re2off_b = re2off_b + nrg*4*lrs4
+
+      if (.not.ifread) return
+      if(nio.eq.0) write(6,*) 'reading curved sides '
+
       nwds4r = nr*lrs4
       call byte_set_view(lre2off_b,fh_re2)
       call byte_read_mpi(bufr,nwds4r,-1,fh_re2,ierr)
-
-      re2off_b = re2off_b + nrg*4*lrs4
       if(ierr.gt.0) goto 100
 
       ! pack buffer
@@ -244,14 +244,15 @@ c-----------------------------------------------------------------------
 
       end
 c-----------------------------------------------------------------------
-      subroutine readp_re2_bc(cbl,bl,ifbswap,ifdist)
+      subroutine readp_re2_bc(cbl,bl,ifbswap,ifread)
 
       include 'SIZE'
       include 'TOTAL'
 
       character*3  cbl(  6,lelt)
       real         bl (5,6,lelt)
-      logical      ifbswap,ifdist
+      logical      ifbswap
+      logical      ifread
 
       parameter(nrmax = 6*lelt) ! maximum number of records
       parameter(lrs   = 2+1+5)  ! record size: eg iside bl(5) cbl
@@ -266,14 +267,6 @@ c-----------------------------------------------------------------------
       integer*8       lre2off_b,dtmp8
       integer*8       nrg
       integer*4       nrg4(2)
-      
-
-      ! fill up with default
-      do iel=1,nelt
-      do k=1,6
-         cbl(k,iel) = 'E  '
-      enddo
-      enddo
 
       ! read total number of records
       nwds4r    = 1*wdsizi/4
@@ -293,7 +286,6 @@ c-----------------------------------------------------------------------
       re2off_b = re2off_b + 4*nwds4r
 
       if(nrg.eq.0) return
-      if(nio.eq.0) write(6,*) 'reading bc for ifld',ifield
 
       ! read data from file
       dtmp8 = np
@@ -306,19 +298,15 @@ c-----------------------------------------------------------------------
       lre2off_b = re2off_b + dtmp8*lrs*wdsizi
       lrs4      = lrs*wdsizi/4
 
+      re2off_b = re2off_b + nrg*4*lrs4
+
+      if (.not.ifread) return
+      if(nio.eq.0) write(6,*) 'reading bc for ifld',ifield
+
       nwds4r = nr*lrs4
       call byte_set_view(lre2off_b,fh_re2)
       call byte_read_mpi(bufr,nwds4r,-1,fh_re2,ierr)
-
-      re2off_b = re2off_b + nrg*4*lrs4
       if(ierr.gt.0) goto 100
-
-      if (.not.ifdist) then
-        do i = 1,nr
-           call buf_to_bc(cbl,bl,bufr)
-        enddo
-        return
-      endif
 
       ! pack buffer
       do i = 1,nr
@@ -343,8 +331,15 @@ c-----------------------------------------------------------------------
       n    = nr
       key  = 1
 
-      call fgslib_crystal_tuple_transfer(cr_re2,n,nrmax,vi,li,
-     &   vl,0,vr,0,key)
+      call fgslib_crystal_tuple_transfer(cr_re2,n,nrmax,vi,li,vl,0,vr,0,
+     &                                   key)
+
+      ! fill up with default
+      do iel=1,nelt
+      do k=1,6
+         cbl(k,iel) = 'E  '
+      enddo
+      enddo
 
       ! unpack buffer
       if(n.gt.nrmax) goto 100
@@ -467,10 +462,8 @@ c-----------------------------------------------------------------------
      $     bl(1,f,e) = buf(3) ! Integer assign of connecting periodic element
       endif
 
-
-
-c     write(6,1) eg,e,f,cbl(f,e),' CBC',nid
-c  1  format(2i8,i4,2x,a3,a4,i8)
+c      write(6,1) eg,e,f,cbl(f,e),' CBC',nid
+c  1   format(2i8,i4,2x,a3,a4,i8)
 
       return
       end
@@ -846,4 +839,3 @@ c-----------------------------------------------------------------------
 
       return
       end
-c-----------------------------------------------------------------------
