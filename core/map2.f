@@ -492,8 +492,6 @@ c-----------------------------------------------------------------------
             eid8(4*npf+2)=j
             eid8(4*npf+3)=bc(1,j,i,1)
             eid8(4*npf+4)=bc(2,j,i,1)
-            write(6,*) eid8(4*npf+1),eid8(4*npf+2),
-     $                               eid8(4*npf+3),eid8(4*npf+4)
             npf=npf+1
           endif
         enddo
