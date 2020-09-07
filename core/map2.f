@@ -337,6 +337,7 @@ c-----------------------------------------------------------------------
       integer*8 offs, offs0
 
       ierr = 0
+
       ifco2 = .false.
       ifmpiio = .true.
 #ifdef NOMPIIO
@@ -363,9 +364,10 @@ c-----------------------------------------------------------------------
 
       call bcast(confle,sizeof(confle))
       if(nid.eq.0) write(6,'(A,A)') ' reading ', confle
-
+      call err_chk(ierr,' Cannot find con file!$')
       call bcast(ifco2,lsize)
       ierr = 0
+
       ! read header
       if (nid.eq.0) then
          if (ifco2) then
@@ -408,13 +410,13 @@ c       do i = 1,mod(nelgti,np)
 c          if (np-i.eq.nid) nelr = nelr + 1
 c       enddo
         call lim_chk(nelr*(nvi+1),nwk,'nelr ','nwk   ','read_con  ')
-      else
+
         nelBr = igl_running_sum(nelr) - nelr
         offs  = offs0 + int(nelBr,8)*(nvi+1)*ISIZE
 
         call byte_set_view(offs,ifh)
         call byte_read_mpi(wk,(nvi+1)*nelr,-1,ifh,ierr)
-        if(ierr.ne.0) goto 100
+        call err_chk(ierr,' Error while reading con file!$')
         call byte_close_mpi(ifh,ierr)
         if (ifbswap) call byte_reverse(wk,(nvi+1)*nelr,ierr)
       endif

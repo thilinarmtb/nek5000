@@ -18,5 +18,5 @@ fi
 
 cd parRSB
 set -x
-make -j4 $PARRSB_OPT examples
+make -j4 $PARRSB_OPT
 set +x

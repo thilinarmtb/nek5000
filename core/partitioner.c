@@ -352,7 +352,7 @@ void fpartMesh(long long *el, long long *vl, double *xyz,
     printf("mode=%d rcb=%d rsb=%d\n",mode,rcb,rsb);
 
   opt[0] = 1;
-  opt[1] = 2; /* verbosity */
+  opt[1] = 1; /* verbosity */
   opt[2] = 0;
 
   if(rcb){
