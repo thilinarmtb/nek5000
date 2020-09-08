@@ -348,9 +348,6 @@ void fpartMesh(long long *el, long long *vl, double *xyz,
   rsb=mode&1;
   rcb=mode&2;
 
-  if(comm.id==0)
-    printf("mode=%d rcb=%d rsb=%d\n",mode,rcb,rsb);
-
   opt[0] = 1;
   opt[1] = 1; /* verbosity */
   opt[2] = 0;
@@ -361,10 +358,6 @@ void fpartMesh(long long *el, long long *vl, double *xyz,
 
     ierr=redistributeData(&nel,vl,el,part,seq,nv,*lelt,&comm);
     if (ierr != 0) goto err;
-
-    if(comm.id==0)
-      printf("After RCB:\n");
-    printPartStat(vl, nel, nv, cext);
   }
 
   if(rsb){
@@ -373,10 +366,6 @@ void fpartMesh(long long *el, long long *vl, double *xyz,
 
     ierr=redistributeData(&nel,vl,el,part,NULL,nv,*lelt,&comm);
     if (ierr != 0) goto err;
-
-    if(comm.id==0)
-      printf("After RSB:\n");
-    printPartStat(vl, nel, nv, cext);
   }
 #elif defined(PARMETIS)
   int metis; metis=mode&4;

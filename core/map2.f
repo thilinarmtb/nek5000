@@ -448,16 +448,12 @@ c-----------------------------------------------------------------------
       integer*8 eid8(4*lelt),vtx8(lelt*2**ldim)
       common /ctmp0/ eid8, vtx8, iwork
 
-      integer npf,nv,nf,i,j,k
+      integer npf,nv,nf,i,j,k,verbose
       integer*8 start
       real*8 tol
 
       nv=2**ndim
       nf=2*ndim
-
-      if(nid.eq.0) then
-        write(6,*) 'Calculating connectivity nelt/ndim:',nelt,ndim
-      endif
 
       k=0
       if(ndim.eq.3) then
@@ -479,12 +475,10 @@ c-----------------------------------------------------------------------
         enddo
       endif
 
-      ierr=0
-      npf=0
-      tol=1e-2
       start=igl_running_sum(nelt)-nelt
 
       !calculate number of periodic pairs
+      npf=0
       do i=1,nelt
         do j=1,nf
           if(cbc(j,i,1).eq.'P  ') then
@@ -497,8 +491,12 @@ c-----------------------------------------------------------------------
         enddo
       enddo
 
+      ierr=0
+      tol=1e-2
+      verbose=1
+
       call fparrsb_findConnectivity(vtx8,xyz,nelt,ndim,
-     $  eid8,npf,tol,nekcomm,ierr)
+     $  eid8,npf,tol,nekcomm,verbose,ierr)
 
       do i=1,nelt*(nv+1)
         wk(i)=vtx8(i)
