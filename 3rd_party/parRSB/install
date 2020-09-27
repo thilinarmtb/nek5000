@@ -10,7 +10,9 @@ if [ -f ./lib/libparRSB.a ]; then
   exit 0
 fi
 
-git clone https://github.com/Nek5000/parRSB.git -b metrics
+if [ ! -d parRSB ]; then
+  git clone https://github.com/thilinarmtb/parRSB.git -b metrics
+fi
 
 cd parRSB
 set -x
