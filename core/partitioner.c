@@ -8,7 +8,7 @@
 typedef struct{
   long long vtx[MAXNV];
   long long eid;
-  int proc;
+  uint proc;
   uint seq;
 } edata;
 
@@ -368,7 +368,7 @@ void fpartMesh(long long *el, long long *vl, double *xyz,
   }
 
   if(rsb){
-    ierr = parRSB_partMesh(part,vl,nel,nv,opt,comm.c);
+    ierr = parRSB_partMesh(part,vl,xyz,nel,nv,opt,comm.c);
     if (ierr != 0) goto err;
 
     ierr=redistributeData(&nel,vl,el,part,NULL,nv,*lelt,&comm);

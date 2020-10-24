@@ -1,11 +1,8 @@
 #!/bin/bash
 set -e
 
-VER=1.0.5
-CHKSUM=1b5b28de5b997c3b0893a3b4dcf5cee8614b9f27
-
 if [ "$1" == "clean" ]; then
-  rm -rf gslib lib include 2>/dev/null 
+  rm -rf lib include gslib/src/*.[ao] 2>/dev/null 
   exit 0
 fi
 
@@ -13,19 +10,10 @@ if [ -f ./lib/libgs.a ]; then
   exit 0
 fi
 
-if [ ! -f v$VER.tar.gz ]; then
-  wget --no-check-certificate -O v$VER.tar.gz http://github.com/gslib/gslib/archive/v$VER.tar.gz
-  SUM=`openssl dgst -sha1 v$VER.tar.gz | sed 's/^.* //'`
-  if [ $SUM != $CHKSUM ] ; then
-    echo 'Invalid checksum!'
-    rm -rf v$VER.tar.gz
-    exit 1
-  fi
+if [ ! -d gslib ]; then
+  git clone https://github.com/thilinarmtb/gslib.git -b gs_setup
 fi
 
-rm -rf gslib 2>/dev/null
-mkdir gslib 
-tar -zxvf v$VER.tar.gz -C ./gslib --strip-components=1
 cd gslib
 set -x
 make -j4 $GSLIB_OPT
