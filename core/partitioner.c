@@ -339,13 +339,15 @@ void fpartMesh(long long *el, long long *vl, double *xyz, const int *lelt, int *
   ierr = 1;
 #if defined(PARRSB)
   parRSB_options options = parrsb_default_options;
-  options.print_timing_info = 0;
   if(*loglevel > 2) options.print_timing_info = 1;
 
   if (mode & 1)
     options.global_partitioner = 0;
   else if (mode & 2)
     options.global_partitioner = 1;
+
+  options.print_timing_info = 1;
+  options.rsb_algo = 1;
 
   if(*loglevel >2)
     printPartStat(vl, nel, nv, cext);

@@ -22,5 +22,6 @@ fi
 
 cd gslib
 set -x
+echo `pwd`
 make -j4 $GSLIB_OPT
 set +x
