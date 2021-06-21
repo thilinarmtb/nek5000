@@ -283,7 +283,10 @@ c solid elements
 
          nelt = nelv + nel
          ierr = 0 
-         if (nelt .gt. lelt) ierr = 1
+         if (nelt .gt. lelt) then
+           write(6, *) 'nelt = ', nelt, 'lelt = ', lelt
+           ierr = 1
+         endif
          call err_chk(ierr,'nelt > lelt!$')
     
          do i = 1,nel
