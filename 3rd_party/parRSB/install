@@ -13,7 +13,7 @@ if [ -f ./lib/libparRSB.a ]; then
 fi
 
 if [ ! -d ./parRSB ]; then
-  git clone https://github.com/Nek5000/parRSB.git
+  git clone https://github.com/thilinarmtb/parRSB.git -b parrsb_repair_fix
 fi
 
 cd parRSB
